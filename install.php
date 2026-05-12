@@ -1,127 +1,101 @@
 <?php
 ob_start();
+/**
+ * SMK Installer - Simple & Reliable
+ * PHP 7.0+ compatible, no external dependencies
+ */
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 set_time_limit(300);
-ini_set('max_execution_time', 300);
+ini_set('max_execution_time', '300');
+ini_set('display_errors', '1');
 error_reporting(E_ALL);
-ini_set('display_errors', 0);
 
-// ─── LOCK CHECK ───────────────────────────────────────────────
-$lockedPage = false;
+// ── Auto-detect base URL for links ────────────────────────────
+$scheme   = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+$host     = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'localhost';
+$selfDir  = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/');
+$BASE_URL = $scheme . '://' . $host . $selfDir; // e.g. http://smk.local or http://localhost/webpertamaku
+
+// ── Lock check ────────────────────────────────────────────────
 if (file_exists(__DIR__ . '/install.lock')) {
-    $lockedPage = true;
-}
-if (!$lockedPage && file_exists(__DIR__ . '/config/env.php')) {
-    $envContent = file_get_contents(__DIR__ . '/config/env.php');
-    if (strpos($envContent, "define('INSTALLER_LOCKED', true)") !== false ||
-        strpos($envContent, 'define("INSTALLER_LOCKED", true)') !== false) {
-        $lockedPage = true;
-    }
-}
-if ($lockedPage) {
-    // Try to extract APP_URL without including the file
     $appUrl = '';
     if (file_exists(__DIR__ . '/config/env.php')) {
-        $ec = file_get_contents(__DIR__ . '/config/env.php');
-        if (preg_match("/define\(['\"]APP_URL['\"],\s*['\"]([^'\"]+)['\"]\)/", $ec, $m)) {
-            $appUrl = rtrim($m[1], '/');
+        $raw = file_get_contents(__DIR__ . '/config/env.php');
+        if (preg_match("/define\('APP_URL'\s*,\s*'([^']+)'\)/", $raw, $m)) {
+            $appUrl = $m[1];
         }
     }
-    ?><!DOCTYPE html>
-<html lang="id">
-<head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Installer Terkunci</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{min-height:100vh;background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);display:flex;align-items:center;justify-content:center;font-family:'Segoe UI',system-ui,sans-serif;color:#e2e8f0}
-.card{background:rgba(255,255,255,0.06);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:48px 40px;max-width:520px;width:90%;text-align:center}
-.icon{font-size:56px;margin-bottom:20px}
-h1{font-size:1.6rem;color:#f1f5f9;margin-bottom:12px}
-p{color:#94a3b8;line-height:1.7;margin-bottom:16px}
-.badge{display:inline-block;background:rgba(239,68,68,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.3);border-radius:50px;padding:6px 18px;font-size:.85rem;margin-bottom:28px}
-.btn{display:inline-block;background:#3b82f6;color:#fff;text-decoration:none;padding:12px 28px;border-radius:10px;font-weight:600;margin:6px;transition:background .2s}
-.btn:hover{background:#2563eb}
-.btn-outline{background:transparent;border:2px solid #3b82f6;color:#3b82f6}
-.btn-outline:hover{background:#3b82f6;color:#fff}
-.tip{background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);border-radius:10px;padding:14px 18px;font-size:.85rem;color:#fde68a;margin-top:24px;text-align:left}
-.tip code{background:rgba(0,0,0,.3);padding:2px 6px;border-radius:4px;font-family:monospace}
-</style>
-</head>
-<body>
-<div class="card">
-  <div class="icon">&#x1F512;</div>
-  <div class="badge">Installer Terkunci</div>
-  <h1>Instalasi Sudah Selesai</h1>
-  <p>File installer telah dikunci untuk keamanan. Website sudah berhasil diinstal dan siap digunakan.</p>
-  <?php if ($appUrl): ?>
-  <a href="<?php echo htmlspecialchars($appUrl, ENT_QUOTES, 'UTF-8'); ?>/" class="btn">&#x1F310; Buka Website</a>
-  <a href="<?php echo htmlspecialchars($appUrl, ENT_QUOTES, 'UTF-8'); ?>/admin/login" class="btn btn-outline">&#x2699;&#xFE0F; Panel Admin</a>
-  <?php endif; ?>
-  <div class="tip">
-    <strong>&#x26A0;&#xFE0F; Ingin menjalankan ulang installer?</strong><br>
-    Hapus file kunci berikut melalui FTP / File Manager:<br><br>
-    <code><?php echo htmlspecialchars(__DIR__ . '/install.lock', ENT_QUOTES, 'UTF-8'); ?></code>
-  </div>
-</div>
-</body>
-</html>
-<?php
-    ob_end_flush();
-    exit;
+    ob_end_clean();
+    die('<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><title>Installer Terkunci</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0f172a;color:#e2e8f0;font-family:sans-serif;display:flex;
+align-items:center;justify-content:center;min-height:100vh;padding:20px}
+.box{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:40px;
+max-width:460px;width:100%;text-align:center}
+.icon{font-size:52px;margin-bottom:16px}
+h1{color:#f1f5f9;font-size:1.4rem;margin-bottom:10px}
+p{color:#94a3b8;font-size:.9rem;line-height:1.6;margin-bottom:16px}
+.btn{display:inline-block;padding:10px 22px;border-radius:8px;text-decoration:none;
+font-weight:600;margin:4px;font-size:.9rem}
+.btn-blue{background:#3b82f6;color:#fff}
+.btn-gray{background:#475569;color:#fff}
+.tip{background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.2);
+border-radius:8px;padding:12px 14px;margin-top:16px;font-size:.82rem;
+color:#fde68a;text-align:left}
+code{background:rgba(0,0,0,.4);padding:2px 6px;border-radius:4px;font-family:monospace;font-size:.8rem}
+</style></head><body><div class="box">
+<div class="icon">&#x1F512;</div>
+<h1>Installer Sudah Selesai</h1>
+<p>File installer telah dikunci. Website sudah siap digunakan.</p>
+' . ($appUrl ? '<a href="' . htmlspecialchars($appUrl) . '/" class="btn btn-blue">&#x1F310; Buka Website</a>
+<a href="' . htmlspecialchars($appUrl) . '/admin/login" class="btn btn-gray">&#x2699; Admin Panel</a>' : '') . '
+<div class="tip"><strong>&#x26A0; Ingin install ulang?</strong><br>
+Hapus file: <code>' . htmlspecialchars(__DIR__ . DIRECTORY_SEPARATOR . 'install.lock') . '</code></div>
+</div></body></html>');
 }
 
-// ─── STEP ROUTING ─────────────────────────────────────────────
-$step   = isset($_GET['step']) ? max(1, min(4, intval($_GET['step']))) : 1;
+// ── Step ─────────────────────────────────────────────────────
+$step   = isset($_GET['step']) ? max(1, min(4, (int)$_GET['step'])) : 1;
 $errors = array();
 
-// ─── POST HANDLER: STEP 2 (Database + App Config) ─────────────
+// ── POST Step 2: Test DB + Save Config ────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 2) {
-    $db_host  = isset($_POST['db_host'])  ? trim($_POST['db_host'])       : 'localhost';
-    $db_port  = isset($_POST['db_port'])  ? intval($_POST['db_port'])     : 3306;
-    $db_user  = isset($_POST['db_user'])  ? trim($_POST['db_user'])       : 'root';
-    $db_pass  = isset($_POST['db_pass'])  ? $_POST['db_pass']             : '';
-    $db_name  = isset($_POST['db_name'])  ? trim($_POST['db_name'])       : 'websmk';
-    $app_url  = isset($_POST['app_url'])  ? rtrim(trim($_POST['app_url']), '/') : '';
-    $app_base = isset($_POST['app_base']) ? trim($_POST['app_base'])      : '';
-    $timezone = isset($_POST['timezone']) ? trim($_POST['timezone'])      : 'Asia/Jakarta';
+    $db_host  = isset($_POST['db_host'])  ? trim($_POST['db_host'])             : 'localhost';
+    $db_port  = isset($_POST['db_port'])  ? (int)$_POST['db_port']              : 3306;
+    $db_user  = isset($_POST['db_user'])  ? trim($_POST['db_user'])             : 'root';
+    $db_pass  = isset($_POST['db_pass'])  ? $_POST['db_pass']                   : '';
+    $db_name  = isset($_POST['db_name'])  ? trim($_POST['db_name'])             : 'websmk';
+    $timezone = isset($_POST['timezone']) ? trim($_POST['timezone'])            : 'Asia/Jakarta';
+    $tz_ok    = array('Asia/Jakarta', 'Asia/Makassar', 'Asia/Jayapura', 'UTC');
+    if (!in_array($timezone, $tz_ok)) $timezone = 'Asia/Jakarta';
 
-    $allowed_tz = array('Asia/Jakarta', 'Asia/Makassar', 'Asia/Jayapura', 'UTC');
-    if (!in_array($timezone, $allowed_tz)) {
-        $timezone = 'Asia/Jakarta';
-    }
-
-    if (empty($db_host)) { $errors[] = 'Database host tidak boleh kosong.'; }
-    if (empty($db_name)) { $errors[] = 'Nama database tidak boleh kosong.'; }
-    if (empty($app_url)) { $errors[] = 'URL Aplikasi tidak boleh kosong.'; }
+    if (empty($db_host)) $errors[] = 'Host database wajib diisi.';
+    if (empty($db_name)) $errors[] = 'Nama database wajib diisi.';
 
     if (empty($errors)) {
-        $connStr = $db_host . ':' . $db_port;
-        $conn = @mysqli_connect($connStr, $db_user, $db_pass);
+        $conn = @mysqli_connect($db_host . ':' . $db_port, $db_user, $db_pass);
         if (!$conn) {
-            $errors[] = 'Koneksi database gagal: ' . mysqli_connect_error() . ' (errno: ' . mysqli_connect_errno() . ')';
+            $errors[] = 'Koneksi MySQL gagal: ' . mysqli_connect_error();
         } else {
             mysqli_close($conn);
-            $_SESSION['install_db'] = array(
+            $_SESSION['smk_install'] = array(
                 'db_host'  => $db_host,
                 'db_port'  => $db_port,
                 'db_user'  => $db_user,
                 'db_pass'  => $db_pass,
                 'db_name'  => $db_name,
-                'app_url'  => $app_url,
-                'app_base' => $app_base,
                 'timezone' => $timezone,
             );
             ob_end_clean();
-            header('Location: install.php?step=3');
+            header('Location: ' . $BASE_URL . '/install.php?step=3');
             exit;
         }
     }
 }
 
-// ─── POST HANDLER: STEP 3 (Admin Account) ─────────────────────
+// ── POST Step 3: Validate Admin ───────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 3) {
     $admin_name  = isset($_POST['admin_name'])  ? trim($_POST['admin_name'])  : '';
     $admin_user  = isset($_POST['admin_user'])  ? trim($_POST['admin_user'])  : '';
@@ -129,812 +103,633 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 3) {
     $admin_pass  = isset($_POST['admin_pass'])  ? $_POST['admin_pass']        : '';
     $admin_pass2 = isset($_POST['admin_pass2']) ? $_POST['admin_pass2']       : '';
 
-    if (empty($admin_name)) {
-        $errors[] = 'Nama lengkap admin wajib diisi.';
-    }
-    if (empty($admin_user) || !preg_match('/^[a-zA-Z0-9_]+$/', $admin_user)) {
-        $errors[] = 'Username hanya boleh huruf, angka, dan underscore.';
-    }
-    if (!filter_var($admin_email, FILTER_VALIDATE_EMAIL)) {
-        $errors[] = 'Format email tidak valid.';
-    }
-    if (strlen($admin_pass) < 6) {
-        $errors[] = 'Password minimal 6 karakter.';
-    }
-    if ($admin_pass !== $admin_pass2) {
-        $errors[] = 'Konfirmasi password tidak cocok.';
-    }
+    if (empty($admin_name))                                          $errors[] = 'Nama lengkap wajib diisi.';
+    if (!preg_match('/^[a-zA-Z0-9_]{3,}$/', $admin_user))           $errors[] = 'Username minimal 3 karakter, huruf/angka/underscore.';
+    if (!filter_var($admin_email, FILTER_VALIDATE_EMAIL))            $errors[] = 'Format email tidak valid.';
+    if (strlen($admin_pass) < 6)                                     $errors[] = 'Password minimal 6 karakter.';
+    if ($admin_pass !== $admin_pass2)                                $errors[] = 'Konfirmasi password tidak cocok.';
 
     if (empty($errors)) {
-        $_SESSION['install_admin'] = array(
-            'admin_name'  => $admin_name,
-            'admin_user'  => $admin_user,
-            'admin_email' => $admin_email,
-            'admin_pass'  => $admin_pass,
+        $_SESSION['smk_admin'] = array(
+            'name'  => $admin_name,
+            'user'  => $admin_user,
+            'email' => $admin_email,
+            'pass'  => $admin_pass,
         );
         ob_end_clean();
-        header('Location: install.php?step=4');
+        header('Location: ' . $BASE_URL . '/install.php?step=4');
         exit;
     }
 }
 
-// ─── POST HANDLER: STEP 4 (Actual Installation) ───────────────
-$installResults = array();
-$installDone    = false;
+// ── POST Step 4: Do Install ───────────────────────────────────
+$log  = array(); // array of ['ok'=>bool, 'msg'=>string]
+$done = false;
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 4) {
-    $action = isset($_POST['action']) ? $_POST['action'] : '';
-    if ($action === 'install') {
-        set_time_limit(300);
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 4
+    && isset($_POST['action']) && $_POST['action'] === 'install') {
 
-        $db  = isset($_SESSION['install_db'])    ? $_SESSION['install_db']    : array();
-        $adm = isset($_SESSION['install_admin']) ? $_SESSION['install_admin'] : array();
+    set_time_limit(300);
 
-        if (empty($db) || empty($adm)) {
-            $errors[] = 'Data sesi hilang. Silakan mulai dari langkah 1.';
+    $db  = isset($_SESSION['smk_install']) ? $_SESSION['smk_install'] : array();
+    $adm = isset($_SESSION['smk_admin'])   ? $_SESSION['smk_admin']   : array();
+
+    if (empty($db) || empty($adm)) {
+        $errors[] = 'Session hilang. Silakan mulai ulang dari Langkah 1.';
+    } else {
+
+        // 1. Connect (no DB selected)
+        $c = @mysqli_connect($db['db_host'] . ':' . $db['db_port'], $db['db_user'], $db['db_pass']);
+        if (!$c) {
+            $log[] = array('ok' => false, 'msg' => 'Koneksi MySQL gagal: ' . mysqli_connect_error());
+            goto finish_install;
+        }
+        $log[] = array('ok' => true, 'msg' => 'Koneksi MySQL berhasil');
+
+        // 2. Create database
+        $dbname = $db['db_name'];
+        $r = mysqli_query($c, "CREATE DATABASE IF NOT EXISTS `{$dbname}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+        $log[] = array('ok' => (bool)$r, 'msg' => $r ? "Database <b>{$dbname}</b> siap" : 'Gagal buat DB: ' . mysqli_error($c));
+
+        // 3. Select database
+        $r = mysqli_select_db($c, $dbname);
+        $log[] = array('ok' => (bool)$r, 'msg' => $r ? "Database dipilih" : 'Gagal pilih DB: ' . mysqli_error($c));
+        if (!$r) { mysqli_close($c); goto finish_install; }
+
+        // 4. Run schema.sql
+        $sf = __DIR__ . '/database/schema.sql';
+        if (!file_exists($sf)) {
+            $log[] = array('ok' => false, 'msg' => 'File database/schema.sql TIDAK DITEMUKAN!');
         } else {
-            // Step 1: Connect to MySQL server (no DB selected)
-            $connStr = $db['db_host'] . ':' . $db['db_port'];
-            $conn = @mysqli_connect($connStr, $db['db_user'], $db['db_pass']);
-            if (!$conn) {
-                $installResults[] = array('ok' => false, 'msg' => 'Gagal konek: ' . mysqli_connect_error());
-            } else {
-                $installResults[] = array('ok' => true, 'msg' => 'Koneksi ke database server berhasil');
-
-                // Step 2: Create database
-                $dbSafe   = $db['db_name'];
-                $createSql = 'CREATE DATABASE IF NOT EXISTS `' . $dbSafe . '` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci';
-                if (mysqli_query($conn, $createSql)) {
-                    $installResults[] = array('ok' => true, 'msg' => 'Database <code>' . htmlspecialchars($dbSafe, ENT_QUOTES, 'UTF-8') . '</code> berhasil dibuat / sudah ada');
-                } else {
-                    $installResults[] = array('ok' => false, 'msg' => 'Gagal membuat database: ' . mysqli_error($conn));
-                }
-
-                // Step 3: Select database
-                if (mysqli_select_db($conn, $db['db_name'])) {
-                    $installResults[] = array('ok' => true, 'msg' => 'Database <code>' . htmlspecialchars($db['db_name'], ENT_QUOTES, 'UTF-8') . '</code> berhasil dipilih');
-                } else {
-                    $installResults[] = array('ok' => false, 'msg' => 'Gagal memilih database: ' . mysqli_error($conn));
-                }
-
-                // Step 4: Execute schema.sql
-                $schemaFile = __DIR__ . '/database/schema.sql';
-                if (!file_exists($schemaFile)) {
-                    $installResults[] = array('ok' => false, 'msg' => 'File <code>database/schema.sql</code> tidak ditemukan');
-                } else {
-                    $sqlRaw = file_get_contents($schemaFile);
-                    // Remove -- comments (preserve newlines)
-                    $sqlRaw = preg_replace('/--[^\n]*/', '', $sqlRaw);
-                    // Remove /* */ block comments
-                    $sqlRaw = preg_replace('/\/\*.*?\*\//s', '', $sqlRaw);
-                    // Split by semicolon
-                    $parts = explode(';', $sqlRaw);
-
-                    $ignorable = array(1007, 1050, 1051, 1061, 1062);
-                    $sqlOk     = true;
-                    $sqlFail   = 0;
-                    $sqlRun    = 0;
-                    $lastErr   = '';
-
-                    foreach ($parts as $part) {
-                        $part = trim($part);
-                        if ($part === '') {
-                            continue;
-                        }
-                        $sqlRun++;
-                        if (!mysqli_query($conn, $part)) {
-                            $errno = mysqli_errno($conn);
-                            $sqlFail++;
-                            if (!in_array($errno, $ignorable)) {
-                                $sqlOk   = false;
-                                $lastErr = mysqli_error($conn);
-                            }
-                            // DO NOT stop — continue all statements
-                        }
-                    }
-
-                    if ($sqlOk) {
-                        $installResults[] = array('ok' => true, 'msg' => 'Skema database berhasil dijalankan (' . $sqlRun . ' statements, ' . $sqlFail . ' diabaikan)');
+            $sql = file_get_contents($sf);
+            $sql = preg_replace('/--[^\n]*/', '', $sql);           // hapus komentar --
+            $sql = preg_replace('/\/\*.*?\*\//s', '', $sql);       // hapus /* */
+            $stmts = array_filter(array_map('trim', explode(';', $sql)));
+            $ok = true; $run = 0; $skip = 0; $lastErr = '';
+            $ignore_codes = array(1007, 1050, 1051, 1061, 1062);
+            foreach ($stmts as $s) {
+                if ($s === '') continue;
+                $run++;
+                if (!mysqli_query($c, $s)) {
+                    $errno = mysqli_errno($c);
+                    if (in_array($errno, $ignore_codes)) {
+                        $skip++;
                     } else {
-                        $installResults[] = array('ok' => false, 'msg' => 'Beberapa SQL gagal (' . $sqlFail . ' error, instalasi dilanjutkan). Error terakhir: ' . $lastErr);
+                        $ok = false;
+                        $lastErr = mysqli_error($c);
                     }
-                }
-
-                // Step 5: Insert admin account
-                $hashedPass = password_hash($adm['admin_pass'], PASSWORD_DEFAULT);
-                $safeName   = mysqli_real_escape_string($conn, $adm['admin_name']);
-                $safeUser   = mysqli_real_escape_string($conn, $adm['admin_user']);
-                $safeEmail  = mysqli_real_escape_string($conn, $adm['admin_email']);
-                $safePass   = mysqli_real_escape_string($conn, $hashedPass);
-                $sqlAdm = "INSERT INTO `admins` (`name`,`username`,`email`,`password`,`role`) "
-                        . "VALUES ('{$safeName}','{$safeUser}','{$safeEmail}','{$safePass}','superadmin') "
-                        . "ON DUPLICATE KEY UPDATE `name`=VALUES(`name`),`password`=VALUES(`password`),`email`=VALUES(`email`)";
-                if (mysqli_query($conn, $sqlAdm)) {
-                    $installResults[] = array('ok' => true, 'msg' => 'Akun administrator <strong>' . htmlspecialchars($safeUser, ENT_QUOTES, 'UTF-8') . '</strong> berhasil disimpan');
-                } else {
-                    $installResults[] = array('ok' => false, 'msg' => 'Gagal menyimpan admin: ' . mysqli_error($conn));
-                }
-                mysqli_close($conn);
-
-                // Step 6: Write config/env.php
-                $appKey   = bin2hex(random_bytes(24));
-                $envLines = array(
-                    '<?php',
-                    "define('DB_HOST',      '" . addslashes($db['db_host']) . "');",
-                    "define('DB_USER',      '" . addslashes($db['db_user']) . "');",
-                    "define('DB_PASS',      '" . addslashes($db['db_pass']) . "');",
-                    "define('DB_NAME',      '" . addslashes($db['db_name']) . "');",
-                    "define('DB_PORT',      " . intval($db['db_port']) . ");",
-                    "define('DB_PREFIX',    '');",
-                    "define('APP_URL',      '" . rtrim($db['app_url'], '/') . "');",
-                    "define('APP_BASE',     '" . $db['app_base'] . "');",
-                    "define('APP_KEY',      '" . $appKey . "');",
-                    "define('APP_TIMEZONE', '" . $db['timezone'] . "');",
-                    "date_default_timezone_set(APP_TIMEZONE);",
-                    "define('APP_ENV',      'production');",
-                    "define('INSTALLER_LOCKED', false);",
-                );
-                $envContent = implode("\n", $envLines) . "\n";
-                $envPath = __DIR__ . '/config/env.php';
-                if (file_put_contents($envPath, $envContent) !== false) {
-                    $installResults[] = array('ok' => true, 'msg' => 'File <code>config/env.php</code> berhasil ditulis');
-                } else {
-                    $installResults[] = array('ok' => false, 'msg' => 'Gagal menulis <code>config/env.php</code> — pastikan folder config/ writable');
-                }
-
-                // Step 7: Determine success (ignore lock failure)
-                $criticalFail = false;
-                foreach ($installResults as $r) {
-                    if (!$r['ok']) {
-                        $criticalFail = true;
-                        break;
-                    }
-                }
-                $installDone = !$criticalFail;
-
-                // Step 8: Write install.lock (non-critical)
-                $lockWritten = file_put_contents(__DIR__ . '/install.lock', date('Y-m-d H:i:s') . "\nInstalled successfully.\n");
-                if ($lockWritten !== false) {
-                    $installResults[] = array('ok' => true, 'msg' => 'File <code>install.lock</code> berhasil dibuat');
-                } else {
-                    $installResults[] = array('ok' => false, 'msg' => 'Gagal membuat <code>install.lock</code> — instalasi tetap berhasil, buat file ini secara manual');
                 }
             }
+            $log[] = array('ok' => $ok, 'msg' => "Schema: {$run} query, {$skip} dilewati"
+                . ($lastErr ? " | Error: {$lastErr}" : ''));
         }
+
+        // 5. Buat/update admin
+        $hp = password_hash($adm['pass'], PASSWORD_DEFAULT);
+        $sn = mysqli_real_escape_string($c, $adm['name']);
+        $su = mysqli_real_escape_string($c, $adm['user']);
+        $se = mysqli_real_escape_string($c, $adm['email']);
+        $sp = mysqli_real_escape_string($c, $hp);
+        $r = mysqli_query($c,
+            "INSERT INTO `admins` (`name`,`username`,`email`,`password`,`role`)
+             VALUES ('{$sn}','{$su}','{$se}','{$sp}','superadmin')
+             ON DUPLICATE KEY UPDATE
+               `name`=VALUES(`name`), `password`=VALUES(`password`), `email`=VALUES(`email`)");
+        $log[] = array('ok' => (bool)$r, 'msg' => $r ? "Admin <b>{$su}</b> disimpan" : 'Gagal simpan admin: ' . mysqli_error($c));
+        mysqli_close($c);
+
+        // 6. Tulis config/env.php
+        $appKey = bin2hex(random_bytes(24));
+        $envContent = "<?php\n"
+            . "// Auto-generated by installer\n"
+            . "define('DB_HOST',          '" . addslashes($db['db_host'])  . "');\n"
+            . "define('DB_USER',          '" . addslashes($db['db_user'])  . "');\n"
+            . "define('DB_PASS',          '" . addslashes($db['db_pass'])  . "');\n"
+            . "define('DB_NAME',          '" . addslashes($db['db_name'])  . "');\n"
+            . "define('DB_PORT',          " . (int)$db['db_port']          . ");\n"
+            . "define('DB_PREFIX',        '');\n"
+            . "define('APP_KEY',          '" . $appKey . "');\n"
+            . "define('APP_TIMEZONE',     '" . $db['timezone'] . "');\n"
+            . "date_default_timezone_set(APP_TIMEZONE);\n"
+            . "define('APP_ENV',          'production');\n"
+            . "define('INSTALLER_LOCKED', false);\n"
+            . "// APP_URL dan APP_BASE sengaja tidak di-set\n"
+            . "// agar auto-detect dari environment (vhosts, subfolder, dll)\n"
+            . "// Uncomment baris di bawah HANYA jika auto-detect tidak akurat:\n"
+            . "// define('APP_URL',  'http://smk.local');\n"
+            . "// define('APP_BASE', '');\n";
+
+        $w = file_put_contents(__DIR__ . '/config/env.php', $envContent);
+        $log[] = array('ok' => $w !== false, 'msg' => $w !== false
+            ? 'config/env.php berhasil ditulis'
+            : 'GAGAL tulis env.php! Pastikan folder config/ bisa ditulis.');
+
+        // 7. Tulis install.lock
+        file_put_contents(__DIR__ . '/install.lock', date('Y-m-d H:i:s') . "\n");
+        $log[] = array('ok' => true, 'msg' => 'install.lock dibuat');
+
+        finish_install:
+        // Cek apakah ada error kritis
+        $hasFail = false;
+        foreach ($log as $l) { if (!$l['ok']) { $hasFail = true; break; } }
+        $done = !$hasFail;
     }
 }
 
-// ─── REQUIREMENTS CHECK ───────────────────────────────────────
-function smk_checkRequirements() {
-    $checks = array();
-
-    $checks[] = array(
-        'label'    => 'PHP versi >= 7.4',
-        'detail'   => 'Versi PHP Anda: ' . PHP_VERSION,
-        'ok'       => version_compare(PHP_VERSION, '7.4.0', '>='),
-        'required' => true,
+// ── Step 1: Requirements ─────────────────────────────────────
+$reqs = array();
+if ($step === 1) {
+    $reqs = array(
+        array('label' => 'PHP >= 7.0',
+              'detail' => 'Versi PHP: ' . PHP_VERSION,
+              'ok'     => version_compare(PHP_VERSION, '7.0.0', '>='),
+              'req'    => true),
+        array('label' => 'Ekstensi MySQLi',
+              'detail' => extension_loaded('mysqli') ? 'Tersedia' : 'Tidak tersedia — aktifkan di php.ini',
+              'ok'     => extension_loaded('mysqli'),
+              'req'    => true),
+        array('label' => 'Folder config/ bisa ditulis',
+              'detail' => is_writable(__DIR__ . '/config/') ? 'OK' : 'Tidak writable',
+              'ok'     => is_writable(__DIR__ . '/config/'),
+              'req'    => true),
+        array('label' => 'Folder uploads/ bisa ditulis',
+              'detail' => is_writable(__DIR__ . '/assets/images/uploads/') ? 'OK' : 'Tidak writable',
+              'ok'     => is_writable(__DIR__ . '/assets/images/uploads/'),
+              'req'    => true),
+        array('label' => 'Ekstensi GD (untuk gambar)',
+              'detail' => extension_loaded('gd') ? 'Tersedia' : 'Tidak tersedia (opsional)',
+              'ok'     => extension_loaded('gd'),
+              'req'    => false),
     );
-
-    $mysqliOk = extension_loaded('mysqli');
-    $checks[] = array(
-        'label'    => 'Ekstensi MySQLi',
-        'detail'   => $mysqliOk ? 'Tersedia' : 'Tidak tersedia — aktifkan extension=mysqli di php.ini',
-        'ok'       => $mysqliOk,
-        'required' => true,
-    );
-
-    $configOk = is_dir(__DIR__ . '/config/') && is_writable(__DIR__ . '/config/');
-    $checks[] = array(
-        'label'    => 'Folder config/ writable',
-        'detail'   => $configOk ? 'OK' : 'Tidak writable — jalankan: chmod 775 config/',
-        'ok'       => $configOk,
-        'required' => true,
-    );
-
-    $uploadsOk = is_dir(__DIR__ . '/assets/images/uploads/') && is_writable(__DIR__ . '/assets/images/uploads/');
-    $checks[] = array(
-        'label'    => 'Folder uploads/ writable',
-        'detail'   => $uploadsOk ? 'OK' : 'Tidak writable — jalankan: chmod 775 assets/images/uploads/',
-        'ok'       => $uploadsOk,
-        'required' => true,
-    );
-
-    $gdOk = extension_loaded('gd');
-    $checks[] = array(
-        'label'    => 'Ekstensi GD (gambar)',
-        'detail'   => $gdOk ? 'Tersedia' : 'Tidak tersedia (opsional untuk resize gambar)',
-        'ok'       => $gdOk,
-        'required' => false,
-    );
-
-    return $checks;
 }
+$allOk = true;
+foreach ($reqs as $r) { if ($r['req'] && !$r['ok']) { $allOk = false; break; } }
 
-$reqChecks     = ($step === 1) ? smk_checkRequirements() : array();
-$allRequiredOk = true;
-foreach ($reqChecks as $c) {
-    if ($c['required'] && !$c['ok']) {
-        $allRequiredOk = false;
-        break;
-    }
-}
-
-// ─── PREFILL VALUES ───────────────────────────────────────────
-$dbDefaults = array(
-    'db_host'  => 'localhost',
-    'db_port'  => 3306,
-    'db_user'  => 'root',
-    'db_pass'  => '',
-    'db_name'  => 'websmk',
-    'app_url'  => 'http://localhost/webpertamaku',
-    'app_base' => '/webpertamaku',
-    'timezone' => 'Asia/Jakarta',
+// ── Prefill form values ───────────────────────────────────────
+$dbV = isset($_SESSION['smk_install']) ? $_SESSION['smk_install'] : array(
+    'db_host' => 'localhost', 'db_port' => 3306, 'db_user' => 'root',
+    'db_pass' => '', 'db_name' => 'websmk', 'timezone' => 'Asia/Jakarta',
 );
-$dbVals  = isset($_SESSION['install_db'])    ? $_SESSION['install_db']    : $dbDefaults;
-$admDefaults = array(
-    'admin_name'  => 'Super Admin',
-    'admin_user'  => 'admin',
-    'admin_email' => '',
+$admV = isset($_SESSION['smk_admin']) ? $_SESSION['smk_admin'] : array(
+    'name' => 'Super Admin', 'user' => 'admin', 'email' => '',
 );
-$admVals = isset($_SESSION['install_admin']) ? $_SESSION['install_admin'] : $admDefaults;
-
-// Repopulate from POST on validation error
 if (!empty($errors) && $step === 2) {
-    foreach (array('db_host','db_port','db_user','db_pass','db_name','app_url','app_base','timezone') as $k) {
-        if (isset($_POST[$k])) {
-            $dbVals[$k] = $_POST[$k];
-        }
-    }
+    foreach (array('db_host','db_port','db_user','db_pass','db_name','timezone') as $k)
+        if (isset($_POST[$k])) $dbV[$k] = $_POST[$k];
 }
 if (!empty($errors) && $step === 3) {
-    foreach (array('admin_name','admin_user','admin_email') as $k) {
-        if (isset($_POST[$k])) {
-            $admVals[$k] = $_POST[$k];
-        }
-    }
+    $map = array('admin_name'=>'name','admin_user'=>'user','admin_email'=>'email');
+    foreach ($map as $post => $sess)
+        if (isset($_POST[$post])) $admV[$sess] = $_POST[$post];
 }
 
-function smk_e($s) {
-    return htmlspecialchars((string)$s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-}
-function smk_sel($val, $cmp) {
-    return ($val === $cmp) ? ' selected' : '';
-}
-
-
+function H($s) { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
+function SEL($v, $c) { return $v === $c ? ' selected' : ''; }
 ?><!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Installer &mdash; SMK Pertamaku</title>
+<title>Installer - SMK Pertamaku</title>
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{
-  min-height:100vh;
-  background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);
-  font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
-  color:#e2e8f0;
-  display:flex;flex-direction:column;align-items:center;
-  padding:40px 16px 60px;
-}
-.installer-header{text-align:center;margin-bottom:40px}
-.installer-header .logo-icon{
-  width:72px;height:72px;
-  background:linear-gradient(135deg,#3b82f6,#6366f1);
-  border-radius:20px;display:inline-flex;align-items:center;justify-content:center;
-  font-size:32px;margin-bottom:16px;
-  box-shadow:0 8px 32px rgba(59,130,246,.35);
-}
-.installer-header h1{font-size:1.75rem;font-weight:700;color:#f1f5f9;letter-spacing:-.5px}
-.installer-header p{color:#64748b;font-size:.95rem;margin-top:6px}
-.progress-wrap{
-  width:100%;max-width:680px;
-  background:rgba(255,255,255,.05);
-  border:1px solid rgba(255,255,255,.09);
-  border-radius:16px;padding:24px 32px;
-  margin-bottom:32px;
-}
+body{background:#0f172a;color:#e2e8f0;font-family:'Segoe UI',system-ui,sans-serif;
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:32px 16px 48px}
+/* Header */
+.hdr{text-align:center;margin-bottom:28px}
+.logo{width:64px;height:64px;background:linear-gradient(135deg,#3b82f6,#6366f1);
+  border-radius:16px;display:inline-flex;align-items:center;justify-content:center;
+  font-size:28px;margin-bottom:12px;box-shadow:0 8px 24px rgba(59,130,246,.3)}
+.hdr h1{font-size:1.55rem;font-weight:700;color:#f1f5f9}
+.hdr p{color:#64748b;margin-top:5px;font-size:.88rem}
+/* Progress */
+.prog{width:100%;max-width:600px;background:#1e293b;border:1px solid #334155;
+  border-radius:12px;padding:18px 24px;margin-bottom:20px}
 .steps{display:flex;align-items:center}
-.step-item{display:flex;flex-direction:column;align-items:center;flex:1;position:relative;}
-.step-item:not(:last-child)::after{content:'';position:absolute;top:18px;left:50%;width:100%;height:2px;background:rgba(255,255,255,.1);z-index:0;}
-.step-item.done:not(:last-child)::after{background:#3b82f6}
-.step-circle{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;z-index:1;border:2px solid rgba(255,255,255,.15);background:#1e293b;color:#64748b;transition:all .3s;}
-.step-item.done .step-circle{background:#3b82f6;border-color:#3b82f6;color:#fff}
-.step-item.active .step-circle{background:linear-gradient(135deg,#3b82f6,#6366f1);border-color:#6366f1;color:#fff;box-shadow:0 0 0 4px rgba(99,102,241,.25);}
-.step-label{font-size:.72rem;color:#64748b;margin-top:8px;text-align:center;font-weight:500;white-space:nowrap}
-.step-item.active .step-label{color:#93c5fd;font-weight:600}
-.step-item.done .step-label{color:#60a5fa}
-.card{width:100%;max-width:680px;background:rgba(255,255,255,0.06);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.1);border-radius:20px;overflow:hidden;}
-.card-header{padding:28px 36px 20px;border-bottom:1px solid rgba(255,255,255,.07)}
-.card-header h2{font-size:1.25rem;color:#f1f5f9;display:flex;align-items:center;gap:10px}
-.card-header p{color:#64748b;font-size:.9rem;margin-top:6px}
-.card-body{padding:28px 36px}
-.alert{border-radius:12px;padding:14px 18px;margin-bottom:20px;display:flex;gap:12px;align-items:flex-start;font-size:.9rem}
-.alert-error{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:#fca5a5}
-.alert-success{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);color:#86efac}
-.alert-warning{background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.2);color:#fde68a}
-.alert-icon{font-size:1.1rem;flex-shrink:0;margin-top:1px}
-.alert ul{margin:6px 0 0 16px}
-.alert li{margin:3px 0}
-.req-grid{display:flex;flex-direction:column;gap:10px}
-.req-item{display:flex;align-items:flex-start;gap:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:14px 18px}
-.req-item.ok{border-color:rgba(34,197,94,.2)}
-.req-item.fail{border-color:rgba(239,68,68,.25)}
-.req-item.warn{border-color:rgba(251,191,36,.2)}
-.req-status{font-size:1.2rem;flex-shrink:0;margin-top:1px}
-.req-label{font-weight:600;color:#e2e8f0;font-size:.9rem}
-.req-detail{font-size:.82rem;color:#64748b;margin-top:3px}
-.req-badge{margin-left:auto;flex-shrink:0;align-self:center;font-size:.7rem;padding:3px 10px;border-radius:20px;font-weight:600}
-.badge-required{background:rgba(239,68,68,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.25)}
-.badge-optional{background:rgba(251,191,36,.1);color:#fde68a;border:1px solid rgba(251,191,36,.2)}
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
-.form-full{grid-column:1/-1}
-.form-group{display:flex;flex-direction:column;gap:6px}
-label{font-size:.85rem;font-weight:600;color:#94a3b8}
-label .hint{font-weight:400;color:#475569;font-size:.8rem;margin-left:6px}
-input,select{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:11px 14px;color:#e2e8f0;font-size:.9rem;outline:none;transition:border-color .2s,box-shadow .2s;width:100%;}
-input::placeholder{color:#334155}
-input:focus,select:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.18)}
-select option{background:#1e293b;color:#e2e8f0}
-.input-wrap{position:relative}
-.input-wrap input{padding-right:44px}
-.toggle-pass{position:absolute;right:13px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#64748b;font-size:1rem;padding:4px;transition:color .2s;}
-.toggle-pass:hover{color:#93c5fd}
-.strength-bar{height:4px;border-radius:4px;margin-top:6px;background:rgba(255,255,255,.08);overflow:hidden}
-.strength-fill{height:100%;width:0;border-radius:4px;transition:width .3s,background .3s}
-.strength-text{font-size:.75rem;margin-top:4px;color:#64748b}
-.section-divider{display:flex;align-items:center;gap:12px;color:#334155;font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin:24px 0 18px;}
-.section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.07)}
-.btn-row{display:flex;gap:12px;margin-top:28px;justify-content:flex-end}
-.btn{padding:12px 28px;border-radius:12px;font-size:.9rem;font-weight:600;cursor:pointer;border:none;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:all .2s;}
-.btn-primary{background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;box-shadow:0 4px 16px rgba(59,130,246,.3)}
-.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(59,130,246,.4)}
-.btn-primary:active{transform:translateY(0)}
-.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
-.btn-ghost{background:rgba(255,255,255,.06);color:#94a3b8;border:1px solid rgba(255,255,255,.1)}
-.btn-ghost:hover{background:rgba(255,255,255,.1);color:#e2e8f0}
-.install-log{background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:10px;margin-bottom:24px;}
-.log-item{display:flex;align-items:flex-start;gap:12px;font-size:.88rem}
-.log-icon{font-size:1.05rem;flex-shrink:0;margin-top:1px}
-.log-msg{color:#cbd5e1;line-height:1.5}
-.log-ok{color:#86efac}
-.log-fail{color:#fca5a5}
-.log-msg code{background:rgba(255,255,255,.08);padding:1px 6px;border-radius:4px;font-size:.82rem}
-.log-msg strong{color:#e2e8f0}
-.success-hero{text-align:center;padding:20px 0 28px}
-.hero-icon{width:80px;height:80px;margin:0 auto 20px;background:linear-gradient(135deg,#22c55e,#16a34a);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:36px;box-shadow:0 8px 32px rgba(34,197,94,.3);}
-.success-hero h2{font-size:1.6rem;color:#f1f5f9;margin-bottom:8px}
-.success-hero p{color:#64748b;font-size:.95rem;max-width:460px;margin:0 auto}
-.creds-box{background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);border-radius:14px;padding:20px 24px;margin:24px 0}
-.creds-box h4{color:#93c5fd;font-size:.85rem;text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px}
-.cred-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-.cred-label{font-size:.85rem;color:#64748b}
-.cred-val{font-size:.9rem;color:#e2e8f0;font-weight:600;font-family:monospace;background:rgba(255,255,255,.07);padding:3px 10px;border-radius:6px}
-.links-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:10px}
-.warning-box{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-radius:12px;padding:16px 20px;color:#fca5a5;font-size:.88rem;line-height:1.6;margin-top:20px;}
-.warning-box strong{display:block;margin-bottom:6px;font-size:.9rem}
-.warning-box code{background:rgba(0,0,0,.3);padding:1px 6px;border-radius:4px}
-.review-grid{display:flex;flex-direction:column;gap:8px;margin-bottom:24px}
-.review-row{display:flex;gap:16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:12px 16px;font-size:.87rem;}
-.review-key{color:#64748b;min-width:160px;flex-shrink:0}
-.review-val{color:#e2e8f0;font-weight:500;word-break:break-all}
-@media(max-width:600px){
-  body{padding:24px 12px 40px}
-  .card-header,.card-body{padding:22px 20px}
-  .form-grid{grid-template-columns:1fr}
-  .form-full{grid-column:1}
-  .progress-wrap{padding:18px 20px}
-  .step-label{font-size:.65rem}
-  .btn-row{flex-direction:column-reverse}
+.si{display:flex;flex-direction:column;align-items:center;flex:1;position:relative}
+.si:not(:last-child)::after{content:'';position:absolute;top:15px;left:50%;
+  width:100%;height:2px;background:#334155;z-index:0}
+.si.done:not(:last-child)::after{background:#3b82f6}
+.sc{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:.75rem;font-weight:700;z-index:1;
+  background:#334155;color:#64748b;border:2px solid #475569}
+.si.done .sc{background:#3b82f6;border-color:#3b82f6;color:#fff}
+.si.active .sc{background:linear-gradient(135deg,#3b82f6,#6366f1);
+  border-color:#6366f1;color:#fff;box-shadow:0 0 0 3px rgba(99,102,241,.2)}
+.sl{font-size:.65rem;color:#64748b;margin-top:5px;text-align:center;white-space:nowrap}
+.si.active .sl{color:#93c5fd;font-weight:600}
+.si.done .sl{color:#60a5fa}
+/* Card */
+.card{width:100%;max-width:600px;background:#1a2235;border:1px solid #2d3f55;
+  border-radius:14px;overflow:hidden}
+.ch{padding:22px 28px 16px;border-bottom:1px solid #2d3f55}
+.ch h2{font-size:1.05rem;color:#f1f5f9;font-weight:700}
+.ch p{color:#64748b;font-size:.83rem;margin-top:4px}
+.cb{padding:22px 28px}
+/* Alerts */
+.alert{border-radius:8px;padding:12px 14px;margin-bottom:16px;
+  font-size:.86rem;display:flex;gap:8px;align-items:flex-start}
+.alert ul{margin:5px 0 0 16px}
+.ae{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:#fca5a5}
+.as{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);color:#86efac}
+.aw{background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.18);color:#fde68a}
+/* Requirements */
+.rg{display:flex;flex-direction:column;gap:8px}
+.ri{display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,.03);
+  border:1px solid #2d3f55;border-radius:8px;padding:11px 14px}
+.ri.ok{border-color:rgba(34,197,94,.2)}.ri.fail{border-color:rgba(239,68,68,.22)}
+.ri.warn{border-color:rgba(251,191,36,.18)}
+.ric{font-size:1rem;flex-shrink:0}
+.rl{font-weight:600;color:#e2e8f0;font-size:.86rem}
+.rd{font-size:.78rem;color:#64748b;margin-top:2px}
+.rb{margin-left:auto;flex-shrink:0;font-size:.67rem;padding:2px 8px;
+  border-radius:12px;font-weight:600;align-self:center}
+.rb.req{background:rgba(239,68,68,.12);color:#fca5a5;border:1px solid rgba(239,68,68,.2)}
+.rb.opt{background:rgba(251,191,36,.08);color:#fde68a;border:1px solid rgba(251,191,36,.15)}
+/* Form */
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.ff{grid-column:1/-1}
+.fg1{display:flex;flex-direction:column;gap:4px}
+label{font-size:.8rem;font-weight:600;color:#94a3b8}
+label small{font-weight:400;color:#475569;margin-left:4px}
+input,select{background:#0f1929;border:1px solid #334155;border-radius:7px;
+  padding:10px 12px;color:#e2e8f0;font-size:.87rem;width:100%;
+  outline:none;transition:border .18s}
+input:focus,select:focus{border-color:#3b82f6;box-shadow:0 0 0 2px rgba(59,130,246,.15)}
+input::placeholder{color:#2d3f55}
+select option{background:#1e293b}
+.iw{position:relative}
+.iw input{padding-right:38px}
+.tp{position:absolute;right:10px;top:50%;transform:translateY(-50%);
+  background:none;border:none;cursor:pointer;color:#64748b;font-size:.9rem;padding:3px}
+.tp:hover{color:#93c5fd}
+.sep{display:flex;align-items:center;gap:8px;color:#334155;font-size:.72rem;
+  font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin:18px 0 12px}
+.sep::before,.sep::after{content:'';flex:1;height:1px;background:#2d3f55}
+/* Buttons */
+.brow{display:flex;gap:10px;margin-top:20px;justify-content:flex-end}
+.btn{padding:10px 22px;border-radius:8px;font-size:.87rem;font-weight:700;
+  cursor:pointer;border:none;text-decoration:none;
+  display:inline-flex;align-items:center;gap:6px;transition:all .18s}
+.bp{background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff}
+.bp:hover{transform:translateY(-1px);filter:brightness(1.1)}
+.bp:disabled{opacity:.45;cursor:not-allowed;transform:none;filter:none}
+.bg{background:#2d3f55;color:#94a3b8;border:1px solid #334155}
+.bg:hover{background:#334155;color:#e2e8f0}
+/* Strength */
+.sb{height:3px;border-radius:2px;margin-top:4px;background:#2d3f55;overflow:hidden}
+.sf{height:100%;width:0;transition:width .25s,background .25s}
+.st{font-size:.7rem;margin-top:3px;color:#64748b}
+/* Install log */
+.log{background:#0f1929;border:1px solid #2d3f55;border-radius:8px;
+  padding:14px;display:flex;flex-direction:column;gap:7px;margin-bottom:18px}
+.li{display:flex;gap:8px;font-size:.84rem;align-items:flex-start}
+.lok{color:#86efac}.lfl{color:#fca5a5}
+.lm code{background:#1e293b;padding:1px 4px;border-radius:3px;font-size:.78rem}
+/* Success */
+.sh{text-align:center;padding:14px 0 20px}
+.shi{width:68px;height:68px;margin:0 auto 14px;
+  background:linear-gradient(135deg,#22c55e,#16a34a);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:30px}
+.sh h2{font-size:1.4rem;color:#f1f5f9;margin-bottom:6px}
+.sh p{color:#64748b;font-size:.88rem}
+.creds{background:rgba(59,130,246,.07);border:1px solid rgba(59,130,246,.18);
+  border-radius:10px;padding:16px 20px;margin:16px 0}
+.creds h4{color:#93c5fd;font-size:.78rem;text-transform:uppercase;
+  letter-spacing:.07em;margin-bottom:10px}
+.cr{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
+.ck{font-size:.82rem;color:#64748b}
+.cv{font-size:.85rem;color:#e2e8f0;font-weight:700;
+  background:#0f1929;padding:2px 8px;border-radius:5px;font-family:monospace}
+.lrow{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:10px}
+.warn{background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.18);
+  border-radius:8px;padding:12px 16px;color:#fca5a5;font-size:.83rem;
+  line-height:1.6;margin-top:16px}
+.warn strong{display:block;margin-bottom:4px}
+.warn code{background:rgba(0,0,0,.3);padding:1px 5px;border-radius:3px}
+/* Review */
+.rv{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.rr{display:flex;gap:12px;background:#0f1929;border:1px solid #2d3f55;
+  border-radius:7px;padding:9px 12px;font-size:.83rem}
+.rk{color:#64748b;min-width:130px;flex-shrink:0}
+.rvv{color:#e2e8f0;font-weight:500;word-break:break-all}
+/* Responsive */
+@media(max-width:520px){
+  .fg{grid-template-columns:1fr}.ff{grid-column:1}
+  .cb,.ch{padding:18px 18px}.brow{flex-direction:column-reverse}
   .btn{justify-content:center}
-  .review-row{flex-direction:column;gap:4px}
-  .review-key{min-width:auto}
+  .rr{flex-direction:column;gap:2px}.rk{min-width:auto}
 }
 </style>
 </head>
 <body>
 
-<div class="installer-header">
-  <div class="logo-icon">&#x1F3EB;</div>
-  <h1>Wizard Instalasi Website SMK</h1>
-  <p>Setup otomatis konfigurasi database, admin, dan aplikasi</p>
+<div class="hdr">
+  <div class="logo">&#x1F3EB;</div>
+  <h1>Installer SMK Pertamaku</h1>
+  <p>Setup otomatis — database, akun admin, konfigurasi</p>
 </div>
 
-<div class="progress-wrap">
-  <div class="steps">
+<div class="prog"><div class="steps">
 <?php
-$stepLabels = array('Persyaratan', 'Database', 'Admin', 'Selesai');
-for ($i = 1; $i <= 4; $i++):
+$labels = array('Persyaratan','Database','Admin','Selesai');
+for ($i = 1; $i <= 4; $i++) {
     $cls = ($i < $step) ? 'done' : (($i === $step) ? 'active' : '');
+    echo '<div class="si ' . $cls . '">'
+       . '<div class="sc">' . ($i < $step ? '&#x2713;' : $i) . '</div>'
+       . '<div class="sl">' . $labels[$i-1] . '</div></div>';
+}
 ?>
-    <div class="step-item <?php echo $cls; ?>">
-      <div class="step-circle"><?php echo ($i < $step) ? '&#x2713;' : $i; ?></div>
-      <div class="step-label"><?php echo $stepLabels[$i - 1]; ?></div>
-    </div>
-<?php endfor; ?>
-  </div>
-</div>
+</div></div>
 
 <div class="card">
 
-
 <?php if ($step === 1): ?>
-<div class="card-header">
-  <h2>&#x1F50D; Cek Persyaratan Sistem</h2>
-  <p>Memastikan server Anda memenuhi persyaratan minimum untuk menjalankan website.</p>
-</div>
-<div class="card-body">
-  <?php if (!$allRequiredOk): ?>
-  <div class="alert alert-error">
-    <span class="alert-icon">&#x26A0;&#xFE0F;</span>
-    <div>Beberapa persyaratan <strong>wajib</strong> belum terpenuhi. Perbaiki terlebih dahulu sebelum melanjutkan.</div>
-  </div>
+<div class="ch"><h2>&#x1F50D; Cek Persyaratan Sistem</h2>
+<p>Pastikan server memenuhi persyaratan sebelum install.</p></div>
+<div class="cb">
+  <?php if ($allOk): ?>
+  <div class="alert as">&#x2705; Semua persyaratan wajib terpenuhi. Siap lanjut!</div>
   <?php else: ?>
-  <div class="alert alert-success">
-    <span class="alert-icon">&#x2705;</span>
-    <div>Semua persyaratan wajib terpenuhi! Anda dapat melanjutkan ke langkah berikutnya.</div>
-  </div>
+  <div class="alert ae">&#x26A0; Ada persyaratan wajib yang belum terpenuhi.</div>
   <?php endif; ?>
-  <div class="req-grid">
-    <?php foreach ($reqChecks as $c):
-      $cls  = $c['ok'] ? 'ok' : ($c['required'] ? 'fail' : 'warn');
-      $icon = $c['ok'] ? '&#x2705;' : ($c['required'] ? '&#x274C;' : '&#x26A0;&#xFE0F;');
-    ?>
-    <div class="req-item <?php echo $cls; ?>">
-      <div class="req-status"><?php echo $icon; ?></div>
-      <div>
-        <div class="req-label"><?php echo smk_e($c['label']); ?></div>
-        <div class="req-detail"><?php echo smk_e($c['detail']); ?></div>
-      </div>
-      <div class="req-badge <?php echo $c['required'] ? 'badge-required' : 'badge-optional'; ?>">
-        <?php echo $c['required'] ? 'Wajib' : 'Opsional'; ?>
-      </div>
+  <div class="rg">
+  <?php foreach ($reqs as $r):
+    $cls = $r['ok'] ? 'ok' : ($r['req'] ? 'fail' : 'warn');
+    $ico = $r['ok'] ? '&#x2705;' : ($r['req'] ? '&#x274C;' : '&#x26A0;');
+  ?>
+  <div class="ri <?php echo $cls; ?>">
+    <div class="ric"><?php echo $ico; ?></div>
+    <div>
+      <div class="rl"><?php echo H($r['label']); ?></div>
+      <div class="rd"><?php echo H($r['detail']); ?></div>
     </div>
-    <?php endforeach; ?>
+    <div class="rb <?php echo $r['req'] ? 'req' : 'opt'; ?>"><?php echo $r['req'] ? 'Wajib' : 'Opsional'; ?></div>
   </div>
-  <div class="btn-row">
-    <?php if ($allRequiredOk): ?>
-    <a href="install.php?step=2" class="btn btn-primary">Lanjutkan &#x27A1;</a>
+  <?php endforeach; ?>
+  </div>
+  <div class="brow">
+    <a href="?step=1" class="btn bg">&#x1F504; Refresh</a>
+    <?php if ($allOk): ?>
+      <a href="?step=2" class="btn bp">Lanjut &#x27A1;</a>
     <?php else: ?>
-    <a href="install.php?step=1" class="btn btn-ghost">&#x1F504; Refresh</a>
-    <button class="btn btn-primary" disabled title="Perbaiki persyaratan di atas dulu">Lanjutkan &#x27A1;</button>
+      <button class="btn bp" disabled>Lanjut &#x27A1;</button>
     <?php endif; ?>
   </div>
 </div>
 
 <?php elseif ($step === 2): ?>
-<div class="card-header">
-  <h2>&#x1F5C4;&#xFE0F; Konfigurasi Database</h2>
-  <p>Masukkan detail koneksi database dan pengaturan dasar aplikasi.</p>
-</div>
-<div class="card-body">
+<div class="ch"><h2>&#x1F5C4; Konfigurasi Database</h2>
+<p>Isi koneksi MySQL. Database akan dibuat otomatis jika belum ada.</p></div>
+<div class="cb">
   <?php if (!empty($errors)): ?>
-  <div class="alert alert-error">
-    <span class="alert-icon">&#x274C;</span>
-    <div><strong>Terjadi kesalahan:</strong>
-      <ul><?php foreach ($errors as $err): ?><li><?php echo smk_e($err); ?></li><?php endforeach; ?></ul>
-    </div>
-  </div>
+  <div class="alert ae"><ul><?php foreach ($errors as $e): ?><li><?php echo H($e); ?></li><?php endforeach; ?></ul></div>
   <?php endif; ?>
-  <form method="POST" action="install.php?step=2">
-    <div class="section-divider">Koneksi Database</div>
-    <div class="form-grid">
-      <div class="form-group">
-        <label for="db_host">Database Host</label>
-        <input type="text" id="db_host" name="db_host" value="<?php echo smk_e($dbVals['db_host']); ?>" placeholder="localhost" required>
+  <form method="POST" action="?step=2">
+    <div class="sep">Koneksi MySQL</div>
+    <div class="fg">
+      <div class="fg1">
+        <label>Host Database</label>
+        <input type="text" name="db_host" value="<?php echo H($dbV['db_host']); ?>" placeholder="localhost" required>
       </div>
-      <div class="form-group">
-        <label for="db_port">Port</label>
-        <input type="number" id="db_port" name="db_port" value="<?php echo smk_e((string)$dbVals['db_port']); ?>" placeholder="3306" min="1" max="65535" required>
+      <div class="fg1">
+        <label>Port <small>default 3306</small></label>
+        <input type="number" name="db_port" value="<?php echo H((string)$dbV['db_port']); ?>" placeholder="3306" min="1" max="65535">
       </div>
-      <div class="form-group">
-        <label for="db_user">Database Username</label>
-        <input type="text" id="db_user" name="db_user" value="<?php echo smk_e($dbVals['db_user']); ?>" placeholder="root" required>
+      <div class="fg1">
+        <label>Username MySQL</label>
+        <input type="text" name="db_user" value="<?php echo H($dbV['db_user']); ?>" placeholder="root" required>
       </div>
-      <div class="form-group">
-        <label for="db_pass">Database Password <span class="hint">(kosongkan jika tidak ada)</span></label>
-        <div class="input-wrap">
-          <input type="password" id="db_pass" name="db_pass" value="<?php echo smk_e($dbVals['db_pass']); ?>" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;">
-          <button type="button" class="toggle-pass" onclick="togglePass('db_pass',this)">&#x1F441;</button>
+      <div class="fg1">
+        <label>Password MySQL <small>kosong = default XAMPP</small></label>
+        <div class="iw">
+          <input type="password" id="dbp" name="db_pass" value="<?php echo H($dbV['db_pass']); ?>" placeholder="(kosong untuk XAMPP)">
+          <button type="button" class="tp" onclick="tp('dbp',this)">&#x1F441;</button>
         </div>
       </div>
-      <div class="form-group form-full">
-        <label for="db_name">Nama Database</label>
-        <input type="text" id="db_name" name="db_name" value="<?php echo smk_e($dbVals['db_name']); ?>" placeholder="websmk" required>
-        <div style="font-size:.78rem;color:#475569;margin-top:4px">&#x2139;&#xFE0F; Database akan dibuat otomatis jika belum ada.</div>
+      <div class="fg1 ff">
+        <label>Nama Database <small>dibuat otomatis jika belum ada</small></label>
+        <input type="text" name="db_name" value="<?php echo H($dbV['db_name']); ?>" placeholder="websmk" required>
       </div>
     </div>
-    <div class="section-divider">Pengaturan Aplikasi</div>
-    <div class="form-grid">
-      <div class="form-group form-full">
-        <label for="app_url">URL Aplikasi <span class="hint">tanpa trailing slash</span></label>
-        <input type="text" id="app_url" name="app_url" value="<?php echo smk_e($dbVals['app_url']); ?>" placeholder="http://localhost/webpertamaku" required>
-        <div style="font-size:.78rem;color:#475569;margin-top:4px">Contoh: <code style="background:rgba(255,255,255,.07);padding:1px 5px;border-radius:4px">http://localhost/webpertamaku</code></div>
-      </div>
-      <div class="form-group">
-        <label for="app_base">Base Path <span class="hint">kosong jika root domain</span></label>
-        <input type="text" id="app_base" name="app_base" value="<?php echo smk_e($dbVals['app_base']); ?>" placeholder="/webpertamaku">
-        <div style="font-size:.78rem;color:#475569;margin-top:4px">Contoh: <code style="background:rgba(255,255,255,.07);padding:1px 5px;border-radius:4px">/webpertamaku</code></div>
-      </div>
-      <div class="form-group">
-        <label for="timezone">Zona Waktu</label>
-        <select id="timezone" name="timezone">
-          <option value="Asia/Jakarta"<?php echo smk_sel($dbVals['timezone'], 'Asia/Jakarta'); ?>>Asia/Jakarta (WIB, UTC+7)</option>
-          <option value="Asia/Makassar"<?php echo smk_sel($dbVals['timezone'], 'Asia/Makassar'); ?>>Asia/Makassar (WITA, UTC+8)</option>
-          <option value="Asia/Jayapura"<?php echo smk_sel($dbVals['timezone'], 'Asia/Jayapura'); ?>>Asia/Jayapura (WIT, UTC+9)</option>
-          <option value="UTC"<?php echo smk_sel($dbVals['timezone'], 'UTC'); ?>>UTC</option>
+    <div class="sep">Pengaturan Lain</div>
+    <div class="fg">
+      <div class="fg1">
+        <label>Zona Waktu</label>
+        <select name="timezone">
+          <option value="Asia/Jakarta"<?php echo SEL($dbV['timezone'],'Asia/Jakarta'); ?>>WIB — Asia/Jakarta (UTC+7)</option>
+          <option value="Asia/Makassar"<?php echo SEL($dbV['timezone'],'Asia/Makassar'); ?>>WITA — Asia/Makassar (UTC+8)</option>
+          <option value="Asia/Jayapura"<?php echo SEL($dbV['timezone'],'Asia/Jayapura'); ?>>WIT — Asia/Jayapura (UTC+9)</option>
+          <option value="UTC"<?php echo SEL($dbV['timezone'],'UTC'); ?>>UTC</option>
         </select>
       </div>
     </div>
-    <div class="btn-row">
-      <a href="install.php?step=1" class="btn btn-ghost">&#x2190; Kembali</a>
-      <button type="submit" class="btn btn-primary">Uji &amp; Lanjutkan &#x27A1;</button>
+    <div class="brow">
+      <a href="?step=1" class="btn bg">&#x2190; Kembali</a>
+      <button type="submit" class="btn bp">Uji &amp; Lanjut &#x27A1;</button>
     </div>
   </form>
 </div>
 
 <?php elseif ($step === 3): ?>
-<div class="card-header">
-  <h2>&#x1F464; Akun Administrator</h2>
-  <p>Buat akun superadmin untuk mengelola website. Simpan kredensial ini dengan aman!</p>
-</div>
-<div class="card-body">
+<div class="ch"><h2>&#x1F464; Akun Administrator</h2>
+<p>Buat akun untuk login ke panel admin. Simpan dengan aman!</p></div>
+<div class="cb">
   <?php if (!empty($errors)): ?>
-  <div class="alert alert-error">
-    <span class="alert-icon">&#x274C;</span>
-    <div><strong>Periksa isian berikut:</strong>
-      <ul><?php foreach ($errors as $err): ?><li><?php echo smk_e($err); ?></li><?php endforeach; ?></ul>
-    </div>
-  </div>
+  <div class="alert ae"><ul><?php foreach ($errors as $e): ?><li><?php echo H($e); ?></li><?php endforeach; ?></ul></div>
   <?php endif; ?>
-  <form method="POST" action="install.php?step=3">
-    <div class="form-grid">
-      <div class="form-group form-full">
-        <label for="admin_name">Nama Lengkap Admin</label>
-        <input type="text" id="admin_name" name="admin_name" value="<?php echo smk_e($admVals['admin_name']); ?>" placeholder="Super Admin" required>
+  <form method="POST" action="?step=3">
+    <div class="fg">
+      <div class="fg1 ff">
+        <label>Nama Lengkap</label>
+        <input type="text" name="admin_name" value="<?php echo H($admV['name']); ?>" placeholder="Super Admin" required>
       </div>
-      <div class="form-group">
-        <label for="admin_user">Username <span class="hint">huruf, angka, underscore</span></label>
-        <input type="text" id="admin_user" name="admin_user"
-          value="<?php echo smk_e($admVals['admin_user']); ?>"
-          placeholder="admin"
-          pattern="[a-zA-Z0-9_]+"
-          title="Hanya huruf, angka, dan underscore"
-          required>
-        <div style="font-size:.78rem;margin-top:4px;color:#475569">Hanya huruf, angka, dan underscore (a-z, 0-9, _)</div>
+      <div class="fg1">
+        <label>Username <small>huruf, angka, _</small></label>
+        <input type="text" name="admin_user" value="<?php echo H($admV['user']); ?>"
+          placeholder="admin" pattern="[a-zA-Z0-9_]+" minlength="3" required>
       </div>
-      <div class="form-group">
-        <label for="admin_email">Email Admin</label>
-        <input type="email" id="admin_email" name="admin_email" value="<?php echo smk_e($admVals['admin_email']); ?>" placeholder="admin@sekolah.sch.id" required>
+      <div class="fg1">
+        <label>Email</label>
+        <input type="email" name="admin_email" value="<?php echo H($admV['email']); ?>"
+          placeholder="admin@sekolah.sch.id" required>
       </div>
-      <div class="form-group">
-        <label for="admin_pass">Password <span class="hint">min. 6 karakter</span></label>
-        <div class="input-wrap">
-          <input type="password" id="admin_pass" name="admin_pass" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" minlength="6" required oninput="checkStrength(this.value)">
-          <button type="button" class="toggle-pass" onclick="togglePass('admin_pass',this)">&#x1F441;</button>
+      <div class="fg1">
+        <label>Password <small>min. 6 karakter</small></label>
+        <div class="iw">
+          <input type="password" id="ap1" name="admin_pass"
+            placeholder="&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;"
+            minlength="6" required oninput="chkS(this.value)">
+          <button type="button" class="tp" onclick="tp('ap1',this)">&#x1F441;</button>
         </div>
-        <div class="strength-bar"><div class="strength-fill" id="strength-fill"></div></div>
-        <div class="strength-text" id="strength-text"></div>
+        <div class="sb"><div id="sf" class="sf"></div></div>
+        <div id="st" class="st"></div>
       </div>
-      <div class="form-group">
-        <label for="admin_pass2">Konfirmasi Password</label>
-        <div class="input-wrap">
-          <input type="password" id="admin_pass2" name="admin_pass2" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" required oninput="checkMatch()">
-          <button type="button" class="toggle-pass" onclick="togglePass('admin_pass2',this)">&#x1F441;</button>
+      <div class="fg1">
+        <label>Konfirmasi Password</label>
+        <div class="iw">
+          <input type="password" id="ap2" name="admin_pass2"
+            placeholder="&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;"
+            required oninput="chkM()">
+          <button type="button" class="tp" onclick="tp('ap2',this)">&#x1F441;</button>
         </div>
-        <div id="match-msg" style="font-size:.78rem;margin-top:4px">&nbsp;</div>
+        <div id="pm" style="font-size:.7rem;margin-top:3px">&nbsp;</div>
       </div>
     </div>
-    <div class="alert alert-warning" style="margin-top:20px">
-      <span class="alert-icon">&#x1F4A1;</span>
-      <div>Simpan username dan password ini di tempat yang aman. Password <strong>tidak dapat dipulihkan</strong> tanpa akses ke database.</div>
+    <div class="alert aw" style="margin-top:14px">
+      &#x1F4A1; Simpan username dan password di tempat aman.
     </div>
-    <div class="btn-row">
-      <a href="install.php?step=2" class="btn btn-ghost">&#x2190; Kembali</a>
-      <button type="submit" class="btn btn-primary">Lanjutkan &#x27A1;</button>
+    <div class="brow">
+      <a href="?step=2" class="btn bg">&#x2190; Kembali</a>
+      <button type="submit" class="btn bp">Lanjut &#x27A1;</button>
     </div>
   </form>
 </div>
 
 <?php elseif ($step === 4): ?>
 
-<?php if ($installDone && !empty($installResults)): ?>
-<div class="card-header">
-  <h2>&#x1F389; Instalasi Berhasil!</h2>
-  <p>Website SMK Pertamaku berhasil diinstal dan siap digunakan.</p>
-</div>
-<div class="card-body">
-  <div class="install-log">
-    <?php foreach ($installResults as $r): ?>
-    <div class="log-item">
-      <span class="log-icon"><?php echo $r['ok'] ? '&#x2705;' : '&#x26A0;&#xFE0F;'; ?></span>
-      <span class="log-msg <?php echo $r['ok'] ? 'log-ok' : 'log-fail'; ?>"><?php echo $r['msg']; ?></span>
-    </div>
+<?php if ($done && !empty($log)): ?>
+<!-- SUCCESS -->
+<div class="ch"><h2>&#x1F389; Instalasi Berhasil!</h2><p>Semua komponen berhasil dikonfigurasi.</p></div>
+<div class="cb">
+  <div class="log">
+    <?php foreach ($log as $l): ?>
+    <div class="li"><span class="<?php echo $l['ok'] ? 'lok' : 'lfl'; ?>"><?php echo $l['ok'] ? '&#x2705;' : '&#x26A0;'; ?></span>
+    <span><?php echo $l['msg']; ?></span></div>
     <?php endforeach; ?>
   </div>
-  <div class="success-hero">
-    <div class="hero-icon">&#x1F38A;</div>
+  <div class="sh">
+    <div class="shi">&#x1F38A;</div>
     <h2>Website Siap Digunakan!</h2>
-    <p>Semua komponen berhasil dikonfigurasi. Kunjungi website atau masuk ke panel admin untuk memulai.</p>
+    <p>Kunjungi website atau masuk ke panel admin untuk mulai mengelola konten.</p>
   </div>
   <?php
-  $finalUrl   = isset($_SESSION['install_db']['app_url'])    ? rtrim($_SESSION['install_db']['app_url'], '/')   : '';
-  $adminUser  = isset($_SESSION['install_admin']['admin_user'])  ? $_SESSION['install_admin']['admin_user']  : 'admin';
-  $adminName  = isset($_SESSION['install_admin']['admin_name'])  ? $_SESSION['install_admin']['admin_name']  : 'Super Admin';
-  $adminEmail = isset($_SESSION['install_admin']['admin_email']) ? $_SESSION['install_admin']['admin_email'] : '';
+  $fu = rtrim($BASE_URL, '/');
+  $au = isset($_SESSION['smk_admin']['user']) ? $_SESSION['smk_admin']['user'] : 'admin';
+  $an = isset($_SESSION['smk_admin']['name']) ? $_SESSION['smk_admin']['name'] : '';
+  $ae = isset($_SESSION['smk_admin']['email']) ? $_SESSION['smk_admin']['email'] : '';
   ?>
-  <div class="creds-box">
+  <div class="creds">
     <h4>&#x1F4CB; Kredensial Login Admin</h4>
-    <div class="cred-row">
-      <span class="cred-label">URL Admin</span>
-      <span class="cred-val"><?php echo smk_e($finalUrl); ?>/admin/login</span>
-    </div>
-    <div class="cred-row">
-      <span class="cred-label">Nama</span>
-      <span class="cred-val"><?php echo smk_e($adminName); ?></span>
-    </div>
-    <div class="cred-row">
-      <span class="cred-label">Username</span>
-      <span class="cred-val"><?php echo smk_e($adminUser); ?></span>
-    </div>
-    <div class="cred-row">
-      <span class="cred-label">Email</span>
-      <span class="cred-val"><?php echo smk_e($adminEmail); ?></span>
-    </div>
-    <div class="cred-row">
-      <span class="cred-label">Password</span>
-      <span class="cred-val">&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull; <span style="font-size:.75rem;color:#475569">(seperti yang Anda masukkan)</span></span>
-    </div>
+    <div class="cr"><span class="ck">URL Website</span><span class="cv"><?php echo H($fu); ?>/</span></div>
+    <div class="cr"><span class="ck">URL Admin</span><span class="cv"><?php echo H($fu); ?>/admin/login</span></div>
+    <div class="cr"><span class="ck">Username</span><span class="cv"><?php echo H($au); ?></span></div>
+    <div class="cr"><span class="ck">Password</span><span class="cv">&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022; (yang kamu masukkan)</span></div>
   </div>
-  <div class="links-row">
-    <?php if ($finalUrl): ?>
-    <a href="<?php echo smk_e($finalUrl); ?>/" class="btn btn-ghost" target="_blank">&#x1F310; Buka Website</a>
-    <a href="<?php echo smk_e($finalUrl); ?>/admin/login" class="btn btn-primary" target="_blank">&#x2699;&#xFE0F; Masuk ke Admin Panel</a>
-    <?php endif; ?>
+  <div class="lrow">
+    <a href="<?php echo H($fu); ?>/" class="btn bg" target="_blank">&#x1F310; Buka Website</a>
+    <a href="<?php echo H($fu); ?>/admin/login" class="btn bp" target="_blank">&#x2699; Masuk Admin</a>
   </div>
-  <div class="warning-box">
-    <strong>&#x26A0;&#xFE0F; Penting &mdash; Hapus File Installer!</strong>
-    Demi keamanan, <strong>segera hapus</strong> file installer setelah instalasi selesai.
-    Akses ke installer oleh orang lain dapat membahayakan website Anda.<br><br>
-    File yang perlu dihapus:<br>
-    <code><?php echo smk_e(__FILE__); ?></code>
+  <div class="warn">
+    <strong>&#x26A0; Penting: Hapus File Installer!</strong>
+    Demi keamanan, segera hapus file ini setelah instalasi selesai:<br>
+    <code><?php echo H(__FILE__); ?></code>
   </div>
-  <?php
-  unset($_SESSION['install_db'], $_SESSION['install_admin']);
-  ?>
+  <?php unset($_SESSION['smk_install'], $_SESSION['smk_admin']); ?>
 </div>
 
-<?php elseif (!empty($installResults) && !$installDone): ?>
-<div class="card-header">
-  <h2>&#x274C; Instalasi Gagal</h2>
-  <p>Terjadi kesalahan saat proses instalasi. Periksa log di bawah ini.</p>
-</div>
-<div class="card-body">
-  <div class="install-log">
-    <?php foreach ($installResults as $r): ?>
-    <div class="log-item">
-      <span class="log-icon"><?php echo $r['ok'] ? '&#x2705;' : '&#x274C;'; ?></span>
-      <span class="log-msg <?php echo $r['ok'] ? 'log-ok' : 'log-fail'; ?>"><?php echo $r['msg']; ?></span>
-    </div>
+<?php elseif (!empty($log) && !$done): ?>
+<!-- FAILED -->
+<div class="ch"><h2>&#x274C; Instalasi Gagal</h2><p>Periksa log berikut dan coba lagi.</p></div>
+<div class="cb">
+  <div class="log">
+    <?php foreach ($log as $l): ?>
+    <div class="li"><span class="<?php echo $l['ok'] ? 'lok' : 'lfl'; ?>"><?php echo $l['ok'] ? '&#x2705;' : '&#x274C;'; ?></span>
+    <span><?php echo $l['msg']; ?></span></div>
     <?php endforeach; ?>
   </div>
-  <div class="alert alert-error">
-    <span class="alert-icon">&#x2139;&#xFE0F;</span>
-    <div>Periksa konfigurasi database dan permission folder, lalu coba lagi.</div>
-  </div>
-  <div class="btn-row">
-    <a href="install.php?step=2" class="btn btn-ghost">&#x2190; Ubah Konfigurasi</a>
-    <form method="POST" action="install.php?step=4" style="margin:0">
-      <button type="submit" name="action" value="install" class="btn btn-primary">&#x1F504; Coba Lagi</button>
+  <div class="brow">
+    <a href="?step=2" class="btn bg">&#x2190; Ubah Konfigurasi</a>
+    <form method="POST" action="?step=4" style="margin:0">
+      <button type="submit" name="action" value="install" class="btn bp">&#x1F504; Coba Lagi</button>
     </form>
   </div>
 </div>
 
 <?php else: ?>
-<div class="card-header">
-  <h2>&#x1F680; Konfirmasi &amp; Mulai Instalasi</h2>
-  <p>Periksa ringkasan konfigurasi Anda sebelum memulai proses instalasi.</p>
-</div>
-<div class="card-body">
-  <?php if (empty($_SESSION['install_db']) || empty($_SESSION['install_admin'])): ?>
-  <div class="alert alert-error">
-    <span class="alert-icon">&#x26A0;&#xFE0F;</span>
-    <div>Data sesi tidak lengkap. Silakan mulai dari langkah 1.
-      <br><a href="install.php?step=1" style="color:#93c5fd">&#x2190; Mulai ulang</a>
-    </div>
+<!-- REVIEW & CONFIRM -->
+<div class="ch"><h2>&#x1F680; Konfirmasi Instalasi</h2><p>Periksa data, lalu klik Mulai Instalasi.</p></div>
+<div class="cb">
+  <?php if (!empty($errors)): ?>
+  <div class="alert ae">
+    <?php echo H($errors[0]); ?>
+    <br><a href="?step=1" style="color:#93c5fd">&#x2190; Mulai ulang</a>
   </div>
+  <?php elseif (!isset($_SESSION['smk_install']) || !isset($_SESSION['smk_admin'])): ?>
+  <div class="alert ae">Session hilang. <a href="?step=1" style="color:#93c5fd">Mulai ulang &#x2190;</a></div>
   <?php else:
-    $db  = isset($_SESSION['install_db'])    ? $_SESSION['install_db']    : array();
-    $adm = isset($_SESSION['install_admin']) ? $_SESSION['install_admin'] : array();
+    $db  = $_SESSION['smk_install'];
+    $adm = $_SESSION['smk_admin'];
   ?>
-  <div class="section-divider">Konfigurasi Database</div>
-  <div class="review-grid">
-    <div class="review-row"><span class="review-key">Host : Port</span><span class="review-val"><?php echo smk_e($db['db_host']); ?> : <?php echo smk_e((string)$db['db_port']); ?></span></div>
-    <div class="review-row"><span class="review-key">Username DB</span><span class="review-val"><?php echo smk_e($db['db_user']); ?></span></div>
-    <div class="review-row"><span class="review-key">Nama Database</span><span class="review-val"><?php echo smk_e($db['db_name']); ?></span></div>
-    <div class="review-row"><span class="review-key">URL Aplikasi</span><span class="review-val"><?php echo smk_e($db['app_url']); ?></span></div>
-    <div class="review-row"><span class="review-key">Base Path</span><span class="review-val"><?php echo smk_e($db['app_base'] ? $db['app_base'] : '(root)'); ?></span></div>
-    <div class="review-row"><span class="review-key">Zona Waktu</span><span class="review-val"><?php echo smk_e($db['timezone']); ?></span></div>
+  <div class="sep">Database</div>
+  <div class="rv">
+    <div class="rr"><span class="rk">Host : Port</span><span class="rvv"><?php echo H($db['db_host']); ?> : <?php echo H((string)$db['db_port']); ?></span></div>
+    <div class="rr"><span class="rk">Username</span><span class="rvv"><?php echo H($db['db_user']); ?></span></div>
+    <div class="rr"><span class="rk">Nama Database</span><span class="rvv"><?php echo H($db['db_name']); ?></span></div>
+    <div class="rr"><span class="rk">Timezone</span><span class="rvv"><?php echo H($db['timezone']); ?></span></div>
   </div>
-  <div class="section-divider">Akun Administrator</div>
-  <div class="review-grid">
-    <div class="review-row"><span class="review-key">Nama Lengkap</span><span class="review-val"><?php echo smk_e($adm['admin_name']); ?></span></div>
-    <div class="review-row"><span class="review-key">Username</span><span class="review-val"><?php echo smk_e($adm['admin_user']); ?></span></div>
-    <div class="review-row"><span class="review-key">Email</span><span class="review-val"><?php echo smk_e($adm['admin_email']); ?></span></div>
-    <div class="review-row"><span class="review-key">Password</span><span class="review-val">&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;</span></div>
+  <div class="sep">Admin</div>
+  <div class="rv">
+    <div class="rr"><span class="rk">Nama</span><span class="rvv"><?php echo H($adm['name']); ?></span></div>
+    <div class="rr"><span class="rk">Username</span><span class="rvv"><?php echo H($adm['user']); ?></span></div>
+    <div class="rr"><span class="rk">Email</span><span class="rvv"><?php echo H($adm['email']); ?></span></div>
   </div>
-  <div class="section-divider">Yang Akan Dilakukan</div>
-  <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:24px;font-size:.88rem;color:#94a3b8">
-    <div>&#x1F4E6; Membuat database <strong style="color:#e2e8f0"><?php echo smk_e($db['db_name']); ?></strong> (jika belum ada)</div>
-    <div>&#x1F5C3;&#xFE0F; Menjalankan skema tabel dari <code style="background:rgba(255,255,255,.07);padding:1px 5px;border-radius:4px">database/schema.sql</code></div>
-    <div>&#x1F464; Membuat/memperbarui akun admin <strong style="color:#e2e8f0"><?php echo smk_e($adm['admin_user']); ?></strong></div>
-    <div>&#x2699;&#xFE0F; Menulis file konfigurasi <code style="background:rgba(255,255,255,.07);padding:1px 5px;border-radius:4px">config/env.php</code></div>
-    <div>&#x1F512; Membuat file kunci <code style="background:rgba(255,255,255,.07);padding:1px 5px;border-radius:4px">install.lock</code></div>
-  </div>
-  <form method="POST" action="install.php?step=4">
-    <div class="btn-row">
-      <a href="install.php?step=3" class="btn btn-ghost">&#x2190; Kembali</a>
-      <button type="submit" name="action" value="install" class="btn btn-primary" onclick="return startInstall(this)">
+  <form method="POST" action="?step=4">
+    <div class="brow">
+      <a href="?step=3" class="btn bg">&#x2190; Kembali</a>
+      <button type="submit" name="action" value="install" id="ibtn"
+        class="btn bp" onclick="return startInstall(this)">
         &#x1F680; Mulai Instalasi
       </button>
     </div>
   </form>
   <?php endif; ?>
 </div>
-
-<?php endif; ?>
 <?php endif; ?>
 
+<?php endif; ?>
 </div><!-- .card -->
 
-<div style="margin-top:24px;font-size:.78rem;color:#334155;text-align:center">
-  SMK Pertamaku Installer &bull; PHP <?php echo PHP_VERSION; ?> &bull; <?php echo date('Y'); ?> &bull;
-  <span style="color:#1e40af">Hapus file ini setelah instalasi selesai</span>
+<div style="margin-top:18px;font-size:.72rem;color:#334155;text-align:center">
+  SMK Installer &bull; PHP <?php echo PHP_VERSION; ?> &bull;
+  <span style="color:#1d3a6e">Hapus install.php setelah instalasi selesai</span>
 </div>
 
 <script>
-function togglePass(id, btn) {
-    var inp = document.getElementById(id);
-    if (!inp) return;
-    inp.type = inp.type === 'password' ? 'text' : 'password';
-    btn.textContent = inp.type === 'password' ? '\uD83D\uDC41' : '\uD83D\uDE48';
+function tp(id, btn) {
+    var i = document.getElementById(id);
+    if (!i) return;
+    i.type = i.type === 'password' ? 'text' : 'password';
+    btn.textContent = i.type === 'password' ? '\uD83D\uDC41' : '\uD83D\uDE48';
 }
-
-function checkStrength(val) {
-    var fill = document.getElementById('strength-fill');
-    var text = document.getElementById('strength-text');
-    if (!fill) return;
-    var score = 0;
-    if (val.length >= 6)  score++;
-    if (val.length >= 10) score++;
-    if (/[A-Z]/.test(val)) score++;
-    if (/[0-9]/.test(val)) score++;
-    if (/[^A-Za-z0-9]/.test(val)) score++;
-    var colors = ['#ef4444', '#ef4444', '#f97316', '#eab308', '#22c55e', '#16a34a'];
-    var labels = ['', 'Sangat Lemah', 'Lemah', 'Sedang', 'Kuat', 'Sangat Kuat'];
-    fill.style.width  = (score * 20) + '%';
-    fill.style.background = colors[score] || '#ef4444';
-    if (text) text.textContent = val.length ? (labels[score] || '') : '';
+function chkS(v) {
+    var f = document.getElementById('sf'), t = document.getElementById('st');
+    if (!f) return;
+    var s = 0;
+    if (v.length >= 6) s++;
+    if (v.length >= 10) s++;
+    if (/[A-Z]/.test(v)) s++;
+    if (/[0-9]/.test(v)) s++;
+    if (/[^A-Za-z0-9]/.test(v)) s++;
+    var c = ['#ef4444','#ef4444','#f97316','#eab308','#22c55e','#16a34a'];
+    var l = ['','Sangat Lemah','Lemah','Sedang','Kuat','Sangat Kuat'];
+    f.style.width = (s * 20) + '%';
+    f.style.background = c[s] || '#ef4444';
+    if (t) t.textContent = v.length ? (l[s] || '') : '';
 }
-
-function checkMatch() {
-    var p1  = document.getElementById('admin_pass');
-    var p2  = document.getElementById('admin_pass2');
-    var msg = document.getElementById('match-msg');
-    if (!p1 || !p2 || !msg) return;
-    if (!p2.value) { msg.textContent = ''; return; }
-    msg.textContent = p1.value === p2.value ? '\u2705 Password cocok' : '\u274C Tidak cocok';
-    msg.style.color = p1.value === p2.value ? '#86efac' : '#fca5a5';
+function chkM() {
+    var p = document.getElementById('ap1'), p2 = document.getElementById('ap2');
+    var m = document.getElementById('pm');
+    if (!p || !p2 || !m) return;
+    if (!p2.value) { m.textContent = ''; return; }
+    m.style.color = p.value === p2.value ? '#86efac' : '#fca5a5';
+    m.textContent  = p.value === p2.value ? '\u2705 Cocok' : '\u274C Tidak cocok';
 }
-
 function startInstall(btn) {
     btn.disabled = true;
-    btn.innerHTML = '\u23F3 Sedang menginstall, harap tunggu...';
-    return true;
+    btn.innerHTML = '\u23F3 Menginstall... harap tunggu';
+    return true; // submit form normally
 }
 </script>
-
 </body>
 </html>
