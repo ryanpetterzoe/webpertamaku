@@ -59,8 +59,12 @@ class PublicController {
         if (!$res || !($program = $res->fetch_assoc())) {
             redirect('/jurusan');
         }
-        // Related news (simple: last 4 news)
-        $rn = $db->query("SELECT id,title,slug,published_at FROM news WHERE is_published=1 ORDER BY published_at DESC LIMIT 4");
+        // Berita khusus jurusan ini + berita umum (program_id IS NULL)
+        $rn = $db->query("SELECT n.*, p.name as program_name FROM news n
+                          LEFT JOIN programs p ON n.program_id=p.id
+                          WHERE n.is_published=1
+                            AND (n.program_id=$id OR n.program_id IS NULL)
+                          ORDER BY n.program_id DESC, n.published_at DESC LIMIT 6");
         $relatedNews = $rn ? $rn->fetch_all(MYSQLI_ASSOC) : [];
         require_once __DIR__ . '/../../views/public/program_detail.php';
     }
@@ -80,27 +84,39 @@ class PublicController {
         $settings = getSettings();
         $page = max(1, (int)$page);
         $perPage = 6;
-        $search = $db->real_escape_string($_GET['q'] ?? '');
-        $category = $db->real_escape_string($_GET['category'] ?? '');
+        $search   = $db->real_escape_string(isset($_GET['q'])        ? $_GET['q']        : '');
+        $category = $db->real_escape_string(isset($_GET['category']) ? $_GET['category'] : '');
+        $programFilter = (int)(isset($_GET['program']) ? $_GET['program'] : 0);
 
-        $where = "is_published=1";
-        if ($search) $where .= " AND (title LIKE '%$search%' OR excerpt LIKE '%$search%')";
-        if ($category) $where .= " AND category='$category'";
+        $where = "n.is_published=1";
+        if ($search)       $where .= " AND (n.title LIKE '%$search%' OR n.excerpt LIKE '%$search%')";
+        if ($category)     $where .= " AND n.category='$category'";
+        if ($programFilter) {
+            $where .= " AND n.program_id=$programFilter";
+        }
 
-        $totalRes = $db->query("SELECT COUNT(*) as cnt FROM news WHERE $where");
-        $total = $totalRes ? (int)$totalRes->fetch_assoc()['cnt'] : 0;
+        $totalRes  = $db->query("SELECT COUNT(*) as cnt FROM news n WHERE $where");
+        $total     = $totalRes ? (int)$totalRes->fetch_assoc()['cnt'] : 0;
         $totalPages = ceil($total / $perPage);
-        $offset = ($page - 1) * $perPage;
+        $offset    = ($page - 1) * $perPage;
 
-        $res = $db->query("SELECT * FROM news WHERE $where ORDER BY published_at DESC LIMIT $perPage OFFSET $offset");
+        $res  = $db->query("SELECT n.*, p.name as program_name, p.code as program_code
+                            FROM news n
+                            LEFT JOIN programs p ON n.program_id = p.id
+                            WHERE $where ORDER BY n.published_at DESC LIMIT $perPage OFFSET $offset");
         $news = $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
 
         // Categories
-        $catRes = $db->query("SELECT DISTINCT category FROM news WHERE is_published=1 ORDER BY category");
+        $catRes    = $db->query("SELECT DISTINCT category FROM news WHERE is_published=1 ORDER BY category");
         $categories = [];
         if ($catRes) { while ($r = $catRes->fetch_assoc()) $categories[] = $r['category']; }
 
-        $currentPage = $page;
+        // Programs for filter
+        $progRes  = $db->query("SELECT id, name, code FROM programs WHERE is_active=1 ORDER BY sort_order");
+        $programs = $progRes ? $progRes->fetch_all(MYSQLI_ASSOC) : [];
+
+        $currentPage   = $page;
+        $activeProgram = $programFilter;
         require_once __DIR__ . '/../../views/public/news.php';
     }
 

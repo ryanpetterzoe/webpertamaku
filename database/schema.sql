@@ -58,11 +58,13 @@ CREATE TABLE IF NOT EXISTS `news` (
   `content` LONGTEXT,
   `image` VARCHAR(255) DEFAULT NULL,
   `category` VARCHAR(100) DEFAULT 'Berita',
+  `program_id` INT DEFAULT NULL COMMENT 'NULL = berita umum, isi = berita jurusan spesifik',
   `author` VARCHAR(100) DEFAULT 'Admin',
   `views` INT DEFAULT 0,
   `is_published` TINYINT(1) DEFAULT 1,
   `published_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`program_id`) REFERENCES `programs`(`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ========================

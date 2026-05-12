@@ -31,15 +31,62 @@ require_once __DIR__ . '/../layouts/header.php';
 
                 <?php if (!empty($relatedNews)): ?>
                 <div class="mt-4">
-                    <h5 style="color:var(--text);margin-bottom:16px;">Berita Terkait</h5>
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <h5 style="color:var(--text);margin:0;">
+                            <i class="fas fa-newspaper me-2" style="color:var(--primary);"></i>
+                            Berita Jurusan Ini
+                        </h5>
+                        <a href="<?= APP_URL ?>/berita?program=<?= $program['id'] ?>"
+                           class="btn btn-sm btn-outline-primary">
+                            Semua Berita <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
+                    </div>
                     <div class="row g-3">
                         <?php foreach ($relatedNews as $n): ?>
                         <div class="col-md-6">
-                            <div class="card h-100">
-                                <div class="card-body">
-                                    <h6 style="color:var(--text);"><?= htmlspecialchars($n['title']) ?></h6>
-                                    <small style="color:var(--text-muted);"><?= timeAgo($n['published_at']) ?></small>
-                                    <a href="<?= APP_URL ?>/berita/<?= htmlspecialchars($n['slug']) ?>" class="btn btn-sm btn-outline-primary mt-2 d-block">Baca</a>
+                            <div class="news-card h-100">
+                                <!-- Thumbnail -->
+                                <a href="<?= APP_URL ?>/berita/<?= htmlspecialchars($n['slug']) ?>"
+                                   class="news-card-img-wrap d-block" style="text-decoration:none;position:relative;">
+                                    <?php if (!empty($n['image'])): ?>
+                                    <img src="<?= UPLOAD_URL . htmlspecialchars($n['image']) ?>"
+                                         alt="<?= htmlspecialchars($n['title']) ?>"
+                                         class="news-card-img">
+                                    <?php else: ?>
+                                    <div class="news-img-placeholder"><i class="fas fa-newspaper"></i></div>
+                                    <?php endif; ?>
+                                    <!-- Badge: jurusan atau umum -->
+                                    <?php if (!empty($n['program_name'])): ?>
+                                    <div style="position:absolute;top:8px;right:8px;
+                                                background:var(--gradient);color:#fff;
+                                                font-size:.65rem;font-weight:700;
+                                                padding:2px 8px;border-radius:50px;">
+                                        <?= htmlspecialchars($n['program_code'] ?? $n['program_name']) ?>
+                                    </div>
+                                    <?php else: ?>
+                                    <div style="position:absolute;top:8px;right:8px;
+                                                background:rgba(0,0,0,.45);color:#fff;
+                                                font-size:.65rem;font-weight:600;
+                                                padding:2px 8px;border-radius:50px;">
+                                        Umum
+                                    </div>
+                                    <?php endif; ?>
+                                </a>
+                                <div class="news-card-body">
+                                    <div class="news-card-meta">
+                                        <span class="news-cat-badge"><?= htmlspecialchars($n['category'] ?? 'Berita') ?></span>
+                                        <span class="news-date"><i class="fas fa-clock"></i><?= timeAgo($n['published_at']) ?></span>
+                                    </div>
+                                    <h5 style="font-size:.9rem;">
+                                        <a href="<?= APP_URL ?>/berita/<?= htmlspecialchars($n['slug']) ?>" style="color:inherit;text-decoration:none;">
+                                            <?= htmlspecialchars($n['title']) ?>
+                                        </a>
+                                    </h5>
+                                    <div class="news-card-footer">
+                                        <a href="<?= APP_URL ?>/berita/<?= htmlspecialchars($n['slug']) ?>" class="news-read-link">
+                                            Baca <i class="fas fa-arrow-right"></i>
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
                         </div>

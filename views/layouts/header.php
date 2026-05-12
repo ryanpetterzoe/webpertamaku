@@ -104,9 +104,10 @@ function isActive(string $path, string $uri, string $base): string {
     <a class="navbar-brand" href="<?= APP_URL ?>/">
       <?php if ($logo): ?>
         <img src="<?= htmlspecialchars($logo) ?>" alt="<?= htmlspecialchars($schoolName) ?>">
+        <span style="font-size:1rem;font-weight:800;color:var(--text);"><?= htmlspecialchars($schoolName) ?></span>
       <?php else: ?>
         <div class="brand-icon">🎓</div>
-        <span><?= htmlspecialchars(explode(' ', $schoolName)[0]) ?> <em><?= htmlspecialchars(implode(' ', array_slice(explode(' ', $schoolName), 1))) ?></em></span>
+        <span><?= htmlspecialchars($schoolName) ?></span>
       <?php endif; ?>
     </a>
 
