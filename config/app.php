@@ -52,5 +52,8 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// Load database functions (getDB)
+require_once __DIR__ . '/database.php';
+
 // Auto-load helpers
 require_once __DIR__ . '/../app/helpers.php';
