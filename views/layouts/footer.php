@@ -6,6 +6,7 @@ $address = $settings['school_address'] ?? '';
 $phone = $settings['school_phone'] ?? '';
 $email = $settings['school_email'] ?? '';
 $whatsapp = $settings['whatsapp_number'] ?? '';
+$footerCopyright = $settings['footer_copyright'] ?? 'Hak cipta dilindungi undang-undang.';
 $currentYear = date('Y');
 
 // Fetch programs for footer
@@ -94,8 +95,7 @@ $socialMedia = $smRes ? $smRes->fetch_all(MYSQLI_ASSOC) : [];
     <div class="footer-bottom">
         <div class="container">
             <p class="mb-0">
-                &copy; <?= $currentYear ?> <?= htmlspecialchars($schoolName) ?>. Hak cipta dilindungi undang-undang.
-                <span class="ms-2">Dibuat dengan <i class="fas fa-heart" style="color:#ef4444;"></i> untuk pendidikan</span>
+                &copy; <?= $currentYear ?> <?= htmlspecialchars($schoolName) ?>. <?= htmlspecialchars($footerCopyright) ?>
             </p>
         </div>
     </div>

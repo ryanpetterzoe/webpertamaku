@@ -307,6 +307,7 @@ INSERT INTO `settings` (`key`, `value`, `group`, `label`) VALUES
 ('principal_photo', '', 'about', 'Foto Kepala Sekolah'),
 ('principal_message', 'Selamat datang di website resmi SMK Pertamaku. Kami berkomitmen untuk memberikan pendidikan terbaik bagi putra-putri Anda.', 'about', 'Sambutan Kepala Sekolah'),
 ('footer_about', 'SMK Pertamaku adalah sekolah menengah kejuruan unggulan yang berkomitmen mencetak lulusan berkompeten dan berkarakter.', 'footer', 'Tentang di Footer'),
+('footer_copyright', 'Hak cipta dilindungi undang-undang.', 'footer', 'Teks Copyright Footer'),
 ('meta_title', 'SMK Pertamaku - Sekolah Menengah Kejuruan Unggulan', 'seo', 'Meta Title'),
 ('meta_description', 'Website resmi SMK Pertamaku. Pendaftaran siswa baru, informasi jurusan, berita dan kegiatan sekolah.', 'seo', 'Meta Description'),
 ('ga_code', '', 'seo', 'Google Analytics Code'),
