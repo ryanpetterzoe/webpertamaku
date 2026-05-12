@@ -119,10 +119,16 @@ require_once __DIR__ . '/../layouts/header.php';
       <!-- Visual side -->
       <div class="col-lg-5 d-none d-lg-block">
         <div class="about-visual">
+          <?php if (!empty($settings['school_building_photo'])): ?>
+          <img src="<?= UPLOAD_URL . htmlspecialchars($settings['school_building_photo']) ?>"
+               alt="Gedung <?= htmlspecialchars($settings['school_name'] ?? '') ?>"
+               class="about-img-main">
+          <?php else: ?>
           <div class="about-placeholder" style="height:400px;">
             <i class="fas fa-school" style="font-size:4rem; color:var(--primary); opacity:0.4;"></i>
             <span style="font-size:0.9rem; color:var(--text-muted);">Foto Gedung Sekolah</span>
           </div>
+          <?php endif; ?>
           <!-- Floating badges -->
           <div class="about-badge-float about-badge-1">
             <div class="badge-icon">🏆</div>

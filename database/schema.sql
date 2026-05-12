@@ -299,6 +299,7 @@ INSERT INTO `settings` (`key`, `value`, `group`, `label`) VALUES
 ('school_logo', '', 'general', 'Logo Sekolah'),
 ('school_logo_dark', '', 'general', 'Logo Sekolah (Dark)'),
 ('school_favicon', '', 'general', 'Favicon'),
+('school_building_photo', '', 'general', 'Foto Gedung Sekolah'),
 ('about_vision', 'Menjadi SMK unggulan yang menghasilkan lulusan berkompeten, berkarakter, dan siap kerja di era global.', 'about', 'Visi'),
 ('about_mission', '1. Menyelenggarakan pendidikan berkualitas berbasis kompetensi\n2. Membangun karakter siswa yang berakhlak mulia\n3. Menjalin kemitraan dengan dunia industri\n4. Mengembangkan potensi siswa secara optimal\n5. Menciptakan lingkungan belajar yang kondusif', 'about', 'Misi'),
 ('about_history', 'SMK Pertamaku didirikan pada tahun 2000 dengan tekad kuat untuk mencetak generasi muda yang terampil dan siap kerja. Dengan fasilitas lengkap dan tenaga pengajar berpengalaman, kami terus berkembang menjadi sekolah kejuruan pilihan masyarakat.', 'about', 'Sejarah'),

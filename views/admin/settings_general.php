@@ -60,6 +60,34 @@
                         <input type="file" name="school_logo_file" class="form-control image-upload-input" accept="image/*" data-preview="#logoPreview">
                         <img id="logoPreview" src="" style="display:none;height:50px;margin-top:8px;border-radius:6px;">
                     </div>
+
+                    <!-- Foto Gedung -->
+                    <div class="col-md-6">
+                        <label class="form-label">
+                            <i class="fas fa-building me-1" style="color:var(--primary);"></i>
+                            Foto Gedung Sekolah
+                        </label>
+                        <small class="form-text" style="display:block;margin-bottom:6px;">
+                            Ditampilkan di halaman Tentang Sekolah &amp; Beranda. Rasio landscape (16:9) disarankan.
+                        </small>
+                        <?php if (!empty($settings['school_building_photo'])): ?>
+                        <div class="mb-2" style="position:relative;">
+                            <img src="<?= UPLOAD_URL . htmlspecialchars($settings['school_building_photo']) ?>"
+                                 alt="Foto Gedung"
+                                 style="width:100%;max-height:140px;object-fit:cover;border-radius:8px;border:1px solid var(--border);">
+                            <div style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.5);color:#fff;font-size:.7rem;padding:2px 8px;border-radius:10px;">Foto saat ini</div>
+                        </div>
+                        <?php endif; ?>
+                        <input type="file" name="school_building_photo_file" id="buildingPhotoInput"
+                               class="form-control" accept="image/*"
+                               onchange="previewBuilding(this)">
+                        <img id="buildingPreview" src="" style="display:none;width:100%;max-height:140px;object-fit:cover;border-radius:8px;margin-top:8px;border:2px solid var(--primary);">
+                        <?php if (!empty($settings['school_building_photo'])): ?>
+                        <small style="color:var(--text-muted);margin-top:4px;display:block;">
+                            <i class="fas fa-info-circle me-1"></i>Kosongkan untuk mempertahankan foto yang ada.
+                        </small>
+                        <?php endif; ?>
+                    </div>
                     <div class="col-md-6">
                         <label class="form-label">Google Maps Embed URL</label>
                         <input type="text" name="maps_embed" class="form-control" placeholder="https://maps.google.com/maps?..." value="<?= htmlspecialchars($settings['maps_embed'] ?? '') ?>">
@@ -151,5 +179,19 @@
         </div>
     </div>
 </div>
+
+<script>
+function previewBuilding(input) {
+    var preview = document.getElementById('buildingPreview');
+    if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+</script>
 
 <?php require_once __DIR__ . '/../layouts/admin_footer.php'; ?>
