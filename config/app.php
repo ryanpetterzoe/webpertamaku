@@ -19,9 +19,9 @@ if (!defined('DB_PORT'))   define('DB_PORT',   3306);
 if (!defined('DB_PREFIX')) define('DB_PREFIX', '');
 
 // ── Auto-detect APP_URL dan APP_BASE ───────────────────────────
-// Ini yang membuat web flexible: vhosts, subfolder, root — semua jalan
+// Bekerja untuk: vhosts (base=''), subfolder (base='/smk'), hosting (base='')
 if (!defined('APP_URL') || !defined('APP_BASE')) {
-    // Deteksi scheme
+    // 1. Deteksi scheme
     $scheme = 'http';
     if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
         $scheme = 'https';
@@ -30,23 +30,29 @@ if (!defined('APP_URL') || !defined('APP_BASE')) {
         $scheme = $_SERVER['HTTP_X_FORWARDED_PROTO'];
     }
 
-    // Deteksi host
+    // 2. Deteksi host
     $host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'localhost';
 
-    // Deteksi base path dari SCRIPT_FILENAME vs DOCUMENT_ROOT
-    // Ini bekerja untuk vhosts (base='') maupun subfolder (base='/namaFolder')
-    $docRoot    = isset($_SERVER['DOCUMENT_ROOT']) ? realpath($_SERVER['DOCUMENT_ROOT']) : '';
-    $scriptDir  = dirname(isset($_SERVER['SCRIPT_FILENAME']) ? $_SERVER['SCRIPT_FILENAME'] : __FILE__);
-    $scriptDir  = realpath($scriptDir);
+    // 3. Deteksi base path — pakai DOCUMENT_ROOT vs direktori file ini
+    // __FILE__ = /path/to/webroot/config/app.php → ambil parent directory
+    $appDir  = str_replace('\\', '/', dirname(dirname(__FILE__))); // folder root project
+    $docRoot = '';
+    if (!empty($_SERVER['DOCUMENT_ROOT'])) {
+        $docRoot = str_replace('\\', '/', rtrim($_SERVER['DOCUMENT_ROOT'], '/'));
+    }
 
-    if ($docRoot && $scriptDir && strpos($scriptDir, $docRoot) === 0) {
-        $base = str_replace($docRoot, '', $scriptDir);
-        $base = str_replace('\\', '/', $base); // Windows path fix
+    if ($docRoot !== '' && strpos($appDir, $docRoot) === 0) {
+        // Subfolder: /var/www/html/webpertamaku → base = /webpertamaku
+        $base = substr($appDir, strlen($docRoot));
         $base = rtrim($base, '/');
     } else {
-        // Fallback: ambil dari SCRIPT_NAME
-        $base = rtrim(dirname(isset($_SERVER['SCRIPT_NAME']) ? $_SERVER['SCRIPT_NAME'] : '/'), '/');
+        // Vhost / root domain: document root IS the app dir → base = ''
+        // Fallback ke SCRIPT_NAME kalau tidak bisa tentukan
+        $sn   = isset($_SERVER['SCRIPT_NAME']) ? $_SERVER['SCRIPT_NAME'] : '/index.php';
+        $base = rtrim(str_replace('\\', '/', dirname($sn)), '/');
         if ($base === '.') $base = '';
+        // Kalau masih ada /config atau /routes di path, hapus (bisa terjadi saat CLI)
+        $base = preg_replace('#/(config|routes|app|views|assets).*$#', '', $base);
     }
 
     if (!defined('APP_URL'))  define('APP_URL',  $scheme . '://' . $host . $base);

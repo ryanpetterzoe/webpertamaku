@@ -54,15 +54,36 @@ require_once __DIR__ . '/../layouts/header.php';
                 <div class="row g-4">
                     <div class="col-lg-6">
                         <h3 class="fw-bold mb-4" style="color:var(--text);">Profil Sekolah</h3>
-                        <table class="table">
+                        <table class="table table-borderless">
                             <tbody>
-                                <tr><td style="color:var(--text-muted);width:40%;">Nama Sekolah</td><td style="color:var(--text);"><strong><?= htmlspecialchars($settings['school_name'] ?? '-') ?></strong></td></tr>
-                                <tr><td style="color:var(--text-muted);">NPSN</td><td style="color:var(--text);"><?= htmlspecialchars($settings['school_npsn'] ?? '-') ?></td></tr>
-                                <tr><td style="color:var(--text-muted);">Akreditasi</td><td><span class="badge bg-success fs-6"><?= htmlspecialchars($settings['school_accreditation'] ?? 'A') ?></span></td></tr>
-                                <tr><td style="color:var(--text-muted);">Alamat</td><td style="color:var(--text);"><?= htmlspecialchars($settings['school_address'] ?? '-') ?></td></tr>
-                                <tr><td style="color:var(--text-muted);">Telepon</td><td style="color:var(--text);"><?= htmlspecialchars($settings['school_phone'] ?? '-') ?></td></tr>
-                                <tr><td style="color:var(--text-muted);">Email</td><td style="color:var(--text);"><?= htmlspecialchars($settings['school_email'] ?? '-') ?></td></tr>
-                                <tr><td style="color:var(--text-muted);">Website</td><td style="color:var(--text);"><?= htmlspecialchars($settings['school_website'] ?? '-') ?></td></tr>
+                                <tr>
+                                    <td style="color:var(--text-muted);width:40%;vertical-align:middle">Nama Sekolah</td>
+                                    <td style="color:var(--text);font-weight:600"><?= htmlspecialchars($settings['school_name'] ?? '-') ?></td>
+                                </tr>
+                                <tr>
+                                    <td style="color:var(--text-muted);vertical-align:middle">NPSN</td>
+                                    <td style="color:var(--text)"><?= htmlspecialchars($settings['school_npsn'] ?? '-') ?></td>
+                                </tr>
+                                <tr>
+                                    <td style="color:var(--text-muted);vertical-align:middle">Akreditasi</td>
+                                    <td><span class="badge bg-success"><?= htmlspecialchars($settings['school_accreditation'] ?? 'A') ?></span></td>
+                                </tr>
+                                <tr>
+                                    <td style="color:var(--text-muted);vertical-align:middle">Alamat</td>
+                                    <td style="color:var(--text)"><?= htmlspecialchars($settings['school_address'] ?? '-') ?></td>
+                                </tr>
+                                <tr>
+                                    <td style="color:var(--text-muted);vertical-align:middle">Telepon</td>
+                                    <td style="color:var(--text)"><?= htmlspecialchars($settings['school_phone'] ?? '-') ?></td>
+                                </tr>
+                                <tr>
+                                    <td style="color:var(--text-muted);vertical-align:middle">Email</td>
+                                    <td style="color:var(--text)"><?= htmlspecialchars($settings['school_email'] ?? '-') ?></td>
+                                </tr>
+                                <tr>
+                                    <td style="color:var(--text-muted);vertical-align:middle">Website</td>
+                                    <td style="color:var(--text)"><?= htmlspecialchars($settings['school_website'] ?? '-') ?></td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>

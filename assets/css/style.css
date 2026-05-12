@@ -1389,3 +1389,131 @@ img { max-width: 100%; height: auto; }
 .badge { border-radius: 6px; }
 .dropdown-toggle::after { margin-left: 4px; }
 hr { border-color: var(--border); }
+
+
+/* ── BOOTSTRAP TABLE DARK MODE FIX ─────────────────────────── */
+/* Bootstrap 5 pakai --bs-table-* variables yang override CSS kita */
+/* Override agar tabel ikut tema dark/light */
+[data-theme="dark"] .table {
+  --bs-table-bg:           #1a2235;
+  --bs-table-striped-bg:   #1e293b;
+  --bs-table-hover-bg:     #1e293b;
+  --bs-table-border-color: #1e293b;
+  --bs-table-color:        #e2e8f0;
+  --bs-table-striped-color:#e2e8f0;
+  --bs-table-hover-color:  #f1f5f9;
+  color: #e2e8f0;
+}
+[data-theme="dark"] .table > :not(caption) > * > * {
+  background-color: var(--bs-table-bg);
+  color: var(--bs-table-color);
+  border-bottom-color: #334155;
+}
+[data-theme="dark"] .table thead th {
+  background-color: #111827 !important;
+  color: #94a3b8 !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .table tbody tr:hover > * {
+  background-color: #1e293b !important;
+  color: #f1f5f9 !important;
+}
+[data-theme="dark"] .table td,
+[data-theme="dark"] .table th {
+  border-color: #334155 !important;
+  color: #e2e8f0 !important;
+}
+/* Light mode tabel juga pastikan warna benar */
+[data-theme="light"] .table {
+  --bs-table-bg:           #ffffff;
+  --bs-table-color:        #1e293b;
+  --bs-table-border-color: #e2e8f0;
+  --bs-table-hover-bg:     #f8faff;
+  --bs-table-hover-color:  #1e293b;
+}
+[data-theme="light"] .table td,
+[data-theme="light"] .table th {
+  color: #475569;
+  border-color: #e2e8f0;
+}
+
+/* ── BOOTSTRAP FORM DARK MODE FIX ──────────────────────────── */
+/* Form di public pages (bukan login) ikut tema */
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-select {
+  background-color: #0b1120 !important;
+  border-color: #334155 !important;
+  color: #e2e8f0 !important;
+}
+[data-theme="dark"] .form-control:focus,
+[data-theme="dark"] .form-select:focus {
+  background-color: #111827 !important;
+  border-color: #3b82f6 !important;
+  color: #e2e8f0 !important;
+  box-shadow: 0 0 0 3px rgba(59,130,246,.18) !important;
+}
+[data-theme="dark"] .form-control::placeholder { color: #475569 !important; }
+[data-theme="dark"] .form-label { color: #94a3b8 !important; }
+[data-theme="dark"] .input-group-text {
+  background-color: #111827 !important;
+  border-color: #334155 !important;
+  color: #64748b !important;
+}
+
+/* ── NAV TABS DARK MODE FIX ─────────────────────────────────── */
+[data-theme="dark"] .nav-tabs {
+  border-bottom-color: #334155;
+}
+[data-theme="dark"] .nav-tabs .nav-link {
+  color: #94a3b8;
+  border-color: transparent;
+}
+[data-theme="dark"] .nav-tabs .nav-link:hover {
+  color: #e2e8f0;
+  border-color: #334155;
+}
+[data-theme="dark"] .nav-tabs .nav-link.active {
+  background-color: #1a2235;
+  border-color: #334155 #334155 #1a2235;
+  color: #60a5fa;
+}
+
+/* ── CARD DARK MODE FIX ─────────────────────────────────────── */
+[data-theme="dark"] .card {
+  background-color: var(--bg-card);
+  border-color: var(--border);
+  color: var(--text);
+}
+[data-theme="dark"] .card-body { color: var(--text); }
+[data-theme="dark"] .card .card-title { color: var(--text); }
+[data-theme="dark"] .card p,
+[data-theme="dark"] .card div { color: inherit; }
+
+/* ── BADGE FIX ───────────────────────────────────────────────── */
+/* Badge Bootstrap override — pastikan terbaca */
+[data-theme="dark"] .badge.bg-success { background-color: #16a34a !important; color: #fff !important; }
+[data-theme="dark"] .badge.bg-primary { background-color: #2563eb !important; color: #fff !important; }
+[data-theme="dark"] .badge.bg-danger  { background-color: #dc2626 !important; color: #fff !important; }
+[data-theme="dark"] .badge.bg-warning { background-color: #d97706 !important; color: #fff !important; }
+
+/* ── ALERT DARK MODE FIX ─────────────────────────────────────── */
+[data-theme="dark"] .alert-danger {
+  background-color: rgba(239,68,68,.15) !important;
+  border-color: rgba(239,68,68,.3) !important;
+  color: #fca5a5 !important;
+}
+[data-theme="dark"] .alert-success {
+  background-color: rgba(34,197,94,.1) !important;
+  border-color: rgba(34,197,94,.25) !important;
+  color: #86efac !important;
+}
+[data-theme="dark"] .alert-warning {
+  background-color: rgba(251,191,36,.08) !important;
+  border-color: rgba(251,191,36,.2) !important;
+  color: #fde68a !important;
+}
+[data-theme="dark"] .alert-info {
+  background-color: rgba(59,130,246,.1) !important;
+  border-color: rgba(59,130,246,.2) !important;
+  color: #93c5fd !important;
+}
