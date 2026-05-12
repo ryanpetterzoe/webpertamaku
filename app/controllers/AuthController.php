@@ -18,18 +18,22 @@ class AuthController {
         $error = '';
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $username = trim($_POST['username'] ?? '');
-            $password = $_POST['password'] ?? '';
+            $username = trim(isset($_POST['username']) ? $_POST['username'] : '');
+            $password = isset($_POST['password']) ? $_POST['password'] : '';
 
             if (empty($username) || empty($password)) {
                 $error = 'Username dan password wajib diisi.';
             } else {
                 $db = getDB();
                 $uname = $db->real_escape_string($username);
-                $res = $db->query("SELECT * FROM admins WHERE username='$uname' AND is_active=1 LIMIT 1");
+                // Cek tanpa is_active dulu, lalu cek manual (kolom mungkin tidak ada di semua versi)
+                $res = $db->query("SELECT * FROM admins WHERE username='$uname' LIMIT 1");
 
                 if ($res && $admin = $res->fetch_assoc()) {
-                    if (password_verify($password, $admin['password'])) {
+                    // Cek is_active jika kolom ada
+                    if (isset($admin['is_active']) && $admin['is_active'] == 0) {
+                        $error = 'Akun tidak aktif. Hubungi administrator.';
+                    } elseif (password_verify($password, $admin['password'])) {
                         // Set session
                         $_SESSION['admin_id'] = $admin['id'];
                         $_SESSION['admin_name'] = $admin['name'];
@@ -50,7 +54,7 @@ class AuthController {
                         $error = 'Password salah.';
                     }
                 } else {
-                    $error = 'Username tidak ditemukan atau akun tidak aktif.';
+                    $error = 'Username tidak ditemukan. Pastikan username sudah benar.';
                 }
             }
         }
