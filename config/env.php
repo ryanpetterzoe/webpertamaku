@@ -1,52 +1,39 @@
 <?php
 /**
  * Environment Configuration
- * ─────────────────────────────────────────────────────────────────
- * File ini berisi konfigurasi database dan aplikasi.
+ * ──────────────────────────────────────────────────────────────
+ * CATATAN: APP_URL dan APP_BASE TIDAK perlu diisi jika menggunakan
+ * auto-detect (default). Sistem akan otomatis mendeteksi berdasarkan
+ * environment (vhosts, subfolder, atau root domain).
  *
- * CARA SETUP:
- *   Opsi 1 (Direkomendasikan): Buka install.php di browser dan ikuti wizard
- *   Opsi 2 (Manual): Edit nilai-nilai di bawah ini sesuai environment kamu
- *
- * UNTUK XAMPP LOKAL (default):
- *   - DB_USER = 'root', DB_PASS = '' (kosong), DB_NAME bebas
- *   - APP_URL  = 'http://localhost/webpertamaku'
- *   - APP_BASE = '/webpertamaku'
- *
- * UNTUK HOSTING ONLINE:
- *   - DB_USER, DB_PASS, DB_NAME sesuai panel hosting (cPanel/Plesk)
- *   - APP_URL  = 'https://namadomain.com' (tanpa trailing slash)
- *   - APP_BASE = '' (kosong karena di root domain)
- * ─────────────────────────────────────────────────────────────────
+ * Hanya isi jika auto-detect tidak akurat (misal di balik reverse proxy).
+ * ──────────────────────────────────────────────────────────────
  */
 
 // ── Database ───────────────────────────────────────────────────
-define('DB_HOST',   'localhost');   // host database (biasanya localhost)
-define('DB_USER',   'root');        // username MySQL (XAMPP default: root)
-define('DB_PASS',   '');            // password MySQL (XAMPP default: kosong)
-define('DB_NAME',   'websmk');      // nama database (harus sudah dibuat)
-define('DB_PORT',   3306);          // port MySQL (default: 3306)
-define('DB_PREFIX', '');            // prefix tabel (kosongkan jika tidak perlu)
+define('DB_HOST',   'localhost');
+define('DB_USER',   'root');
+define('DB_PASS',   '');
+define('DB_NAME',   'websmk');
+define('DB_PORT',   3306);
+define('DB_PREFIX', '');
 
-// ── Aplikasi ───────────────────────────────────────────────────
-// APP_URL : URL lengkap tanpa trailing slash
-// APP_BASE: path folder dari domain root (kosong jika di root domain)
-define('APP_URL',  'http://localhost/webpertamaku');
-define('APP_BASE', '/webpertamaku');
+// ── APP_URL & APP_BASE ─────────────────────────────────────────
+// Biarkan di-comment untuk auto-detect (DIREKOMENDASIKAN)
+// Uncomment dan isi HANYA jika auto-detect salah:
+//
+// Contoh subfolder    : define('APP_URL', 'http://localhost/webpertamaku');
+//                       define('APP_BASE', '/webpertamaku');
+//
+// Contoh vhosts/domain: define('APP_URL', 'http://smk.local');
+//                       define('APP_BASE', '');
+//
+// Contoh hosting      : define('APP_URL', 'https://smkpertamaku.sch.id');
+//                       define('APP_BASE', '');
 
-// ── Keamanan ───────────────────────────────────────────────────
-define('APP_KEY', 'smk_default_key_ganti_setelah_install');
-
-// ── Timezone ───────────────────────────────────────────────────
-// Pilihan: Asia/Jakarta (WIB), Asia/Makassar (WITA), Asia/Jayapura (WIT), UTC
+// ── Settings ───────────────────────────────────────────────────
+define('APP_KEY',      'smk_default_key_ganti_ini');
 define('APP_TIMEZONE', 'Asia/Jakarta');
 date_default_timezone_set(APP_TIMEZONE);
-
-// ── Mode Error ─────────────────────────────────────────────────
-// 'development' = tampilkan error (untuk lokal)
-// 'production'  = sembunyikan error (untuk hosting)
-define('APP_ENV', 'development');
-
-// ── Installer ──────────────────────────────────────────────────
-// Ubah ke true setelah instalasi selesai untuk mengunci installer
+define('APP_ENV',      'development');
 define('INSTALLER_LOCKED', false);
