@@ -313,7 +313,9 @@ INSERT INTO `settings` (`key`, `value`, `group`, `label`) VALUES
 ('stats_teachers', '45', 'stats', 'Jumlah Guru'),
 ('stats_programs', '4', 'stats', 'Jumlah Jurusan'),
 ('stats_alumni', '2000', 'stats', 'Jumlah Alumni'),
-('theme_default', 'light', 'appearance', 'Tema Default');
+('theme_default', 'light', 'appearance', 'Tema Default'),
+('accent_primary', '#2563eb', 'appearance', 'Warna Primer'),
+('accent_dark',    '#1d4ed8', 'appearance', 'Warna Primer (Gelap)');
 
 -- Programs default
 INSERT INTO `programs` (`name`, `code`, `description`, `icon`, `quota`, `sort_order`) VALUES

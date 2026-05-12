@@ -104,8 +104,11 @@ $pageTitle = $adminPageTitle ?? 'Admin Panel';
         <!-- Pengaturan -->
         <div class="sidebar-section">
             <div class="sidebar-section-title">Pengaturan</div>
-            <a href="<?= APP_URL ?>/admin/settings/umum" class="sidebar-link <?= strpos($currentPath,'/admin/settings') !== false ? 'active' : '' ?>">
+            <a href="<?= APP_URL ?>/admin/settings/umum" class="sidebar-link <?= strpos($currentPath,'/admin/settings/umum') !== false ? 'active' : '' ?>">
                 <i class="fas fa-cog"></i> Pengaturan Umum
+            </a>
+            <a href="<?= APP_URL ?>/admin/settings/tampilan" class="sidebar-link <?= strpos($currentPath,'/admin/settings/tampilan') !== false ? 'active' : '' ?>">
+                <i class="fas fa-palette"></i> Tampilan &amp; Warna
             </a>
         </div>
     </nav>

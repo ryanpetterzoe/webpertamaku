@@ -45,10 +45,13 @@ if ($uri === '/profil' || $uri === '/visi-misi' || $uri === '/sejarah' || $uri =
 if ($uri === '/jurusan') { $public->programs(); return; }
 if (preg_match('#^/jurusan/(\d+)$#', $uri, $m)) { $public->programDetail($m[1]); return; }
 if ($uri === '/guru-staff') { $public->teachers(); return; }
+if ($uri === '/staff') { redirect('/guru-staff'); return; }
 if ($uri === '/berita') { $public->news(max(1, (int)(isset($_GET['page']) ? $_GET['page'] : 1))); return; }
 if (preg_match('#^/berita/([a-z0-9-]+)$#', $uri, $m)) { $public->newsDetail($m[1]); return; }
 if ($uri === '/galeri') { $public->gallery(max(1, (int)(isset($_GET['page']) ? $_GET['page'] : 1))); return; }
 if ($uri === '/prestasi') { $public->achievements(); return; }
+if ($uri === '/testimonial') { $public->testimonials(); return; }
+if ($uri === '/agenda') { $public->agenda(); return; }
 if ($uri === '/kontak') { $public->contact(); return; }
 if ($uri === '/spmb') { $public->spmbInfo(); return; }
 if ($uri === '/spmb/daftar') { $public->spmbForm(); return; }
@@ -100,6 +103,33 @@ if (preg_match('#^/admin/spmb/hapus/(\d+)$#', $uri, $m)) { $cms->spmbDelete($m[1
 if ($uri === '/admin/spmb/pengaturan') { ($method==='POST') ? $cms->spmbSettingsSave() : $cms->spmbSettings(); return; }
 
 if ($uri === '/admin/settings/umum') { $cms->settingsGeneral(); return; }
+
+// --- PRESTASI ---
+if ($uri === '/admin/prestasi') { $cms->achievementsList(); return; }
+if ($uri === '/admin/prestasi/tambah') { ($method==='POST') ? $cms->achievementSave() : $cms->achievementForm(); return; }
+if (preg_match('#^/admin/prestasi/edit/(\d+)$#', $uri, $m)) { ($method==='POST') ? $cms->achievementSave($m[1]) : $cms->achievementForm($m[1]); return; }
+if (preg_match('#^/admin/prestasi/hapus/(\d+)$#', $uri, $m)) { $cms->achievementDelete($m[1]); return; }
+
+// --- TESTIMONIAL ---
+if ($uri === '/admin/testimonial') { $cms->testimonialsList(); return; }
+if ($uri === '/admin/testimonial/tambah') { ($method==='POST') ? $cms->testimonialSave() : $cms->testimonialForm(); return; }
+if (preg_match('#^/admin/testimonial/edit/(\d+)$#', $uri, $m)) { ($method==='POST') ? $cms->testimonialSave($m[1]) : $cms->testimonialForm($m[1]); return; }
+if (preg_match('#^/admin/testimonial/hapus/(\d+)$#', $uri, $m)) { $cms->testimonialDelete($m[1]); return; }
+
+// --- AGENDA ---
+if ($uri === '/admin/agenda') { $cms->agendaList(); return; }
+if ($uri === '/admin/agenda/tambah') { ($method==='POST') ? $cms->agendaSave() : $cms->agendaForm(); return; }
+if (preg_match('#^/admin/agenda/edit/(\d+)$#', $uri, $m)) { ($method==='POST') ? $cms->agendaSave($m[1]) : $cms->agendaForm($m[1]); return; }
+if (preg_match('#^/admin/agenda/hapus/(\d+)$#', $uri, $m)) { $cms->agendaDelete($m[1]); return; }
+
+// --- STAFF ---
+if ($uri === '/admin/staff') { $cms->staffList(); return; }
+if ($uri === '/admin/staff/tambah') { ($method==='POST') ? $cms->staffSave() : $cms->staffForm(); return; }
+if (preg_match('#^/admin/staff/edit/(\d+)$#', $uri, $m)) { ($method==='POST') ? $cms->staffSave($m[1]) : $cms->staffForm($m[1]); return; }
+if (preg_match('#^/admin/staff/hapus/(\d+)$#', $uri, $m)) { $cms->staffDelete($m[1]); return; }
+
+// --- PENGATURAN TAMPILAN ---
+if ($uri === '/admin/settings/tampilan') { $cms->settingsTampilan(); return; }
 
 // ── 404 ────────────────────────────────────────────────────────
 http_response_code(404);
