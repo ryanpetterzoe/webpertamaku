@@ -2,8 +2,10 @@
 assets/images/uploads/*
 !assets/images/uploads/.gitkeep
 
-# Environment / config sensitif
-config/env.php
+# Environment lokal (jangan commit jika berisi password production)
+# config/env.php sudah disertakan di repo dengan nilai default XAMPP
+# Jika kamu mengubah password/kredensial, tambahkan kembali baris ini:
+# config/env.php
 .env
 
 # Installer lock (hapus setelah instalasi)
