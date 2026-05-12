@@ -2,9 +2,12 @@
 assets/images/uploads/*
 !assets/images/uploads/.gitkeep
 
-# Environment / config lokal
-config/local.php
+# Environment / config sensitif
+config/env.php
 .env
+
+# Installer lock (hapus setelah instalasi)
+install.lock
 
 # OS files
 .DS_Store

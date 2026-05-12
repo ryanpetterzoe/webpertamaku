@@ -5,32 +5,22 @@
 /* ============================================================
    Theme Toggle
    ============================================================ */
+const THEME_KEY = 'smk_theme';
+
 function initTheme() {
-    const savedTheme = localStorage.getItem('theme') || 'light';
+    const savedTheme = localStorage.getItem(THEME_KEY) || 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);
-    updateThemeIcon(savedTheme);
 }
 
 function toggleTheme() {
     const current = document.documentElement.getAttribute('data-theme') || 'light';
     const next = current === 'light' ? 'dark' : 'light';
     document.documentElement.setAttribute('data-theme', next);
-    localStorage.setItem('theme', next);
-    updateThemeIcon(next);
+    localStorage.setItem(THEME_KEY, next);
 }
 
 function updateThemeIcon(theme) {
-    const btn = document.getElementById('themeToggle');
-    if (!btn) return;
-    const icon = btn.querySelector('i');
-    const text = btn.querySelector('span');
-    if (theme === 'dark') {
-        if (icon) { icon.className = 'fas fa-sun'; }
-        if (text) { text.textContent = 'Light'; }
-    } else {
-        if (icon) { icon.className = 'fas fa-moon'; }
-        if (text) { text.textContent = 'Dark'; }
-    }
+    // No-op — CSS handles visual state via data-theme attribute
 }
 
 /* ============================================================
@@ -261,10 +251,12 @@ function initImagePreview() {
 function initPreloader() {
     const loader = document.getElementById('preloader');
     if (!loader) return;
-    window.addEventListener('load', () => {
-        loader.style.opacity = '0';
-        setTimeout(() => { loader.style.display = 'none'; }, 500);
-    });
+    const hide = () => loader.classList.add('hidden');
+    if (document.readyState === 'complete') {
+        setTimeout(hide, 200);
+    } else {
+        window.addEventListener('load', () => setTimeout(hide, 300));
+    }
 }
 
 /* ============================================================
