@@ -668,6 +668,46 @@ class CmsController {
         require_once __DIR__ . '/../../views/admin/settings_tampilan.php';
     }
 
+    // ===================== SOCIAL MEDIA =====================
+    public function socialMediaSave($id = null) {
+        requireLogin();
+        $db = getDB();
+        $platform = clean($_POST['platform'] ?? '');
+        $url      = $db->real_escape_string($_POST['url'] ?? '');
+        $icon     = clean($_POST['icon'] ?? 'fas fa-link');
+        $isActive = isset($_POST['is_active']) ? (int)$_POST['is_active'] : 1;
+
+        if (empty($platform) || empty($url)) {
+            $this->flash('flash_error', 'Platform dan URL wajib diisi.');
+            redirect('/admin/settings/umum#social');
+        }
+
+        if ($id) {
+            $db->query("UPDATE social_media SET platform='$platform', url='$url', icon='$icon', is_active=$isActive WHERE id=" . (int)$id);
+            $this->flash('flash_success', 'Sosial media berhasil diperbarui.');
+        } else {
+            $db->query("INSERT INTO social_media (platform, url, icon, is_active) VALUES ('$platform', '$url', '$icon', $isActive)");
+            $this->flash('flash_success', 'Sosial media berhasil ditambahkan.');
+        }
+        redirect('/admin/settings/umum#social');
+    }
+
+    public function socialMediaToggle($id) {
+        requireLogin();
+        $db = getDB();
+        $db->query("UPDATE social_media SET is_active = NOT is_active WHERE id=" . (int)$id);
+        $this->flash('flash_success', 'Status sosial media berhasil diubah.');
+        redirect('/admin/settings/umum#social');
+    }
+
+    public function socialMediaDelete($id) {
+        requireLogin();
+        $db = getDB();
+        $db->query("DELETE FROM social_media WHERE id=" . (int)$id);
+        $this->flash('flash_success', 'Sosial media berhasil dihapus.');
+        redirect('/admin/settings/umum#social');
+    }
+
     private function saveSetting($key, $value, $group = 'general') {
         $db = getDB();
         $k = $db->real_escape_string($key);

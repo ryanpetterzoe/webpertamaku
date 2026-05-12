@@ -104,6 +104,12 @@ if ($uri === '/admin/spmb/pengaturan') { ($method==='POST') ? $cms->spmbSettings
 
 if ($uri === '/admin/settings/umum') { $cms->settingsGeneral(); return; }
 
+// --- SOSIAL MEDIA ---
+if ($uri === '/admin/sosmed/simpan') { $cms->socialMediaSave(); return; }
+if (preg_match('#^/admin/sosmed/edit/(\d+)$#', $uri, $m)) { $cms->socialMediaSave($m[1]); return; }
+if (preg_match('#^/admin/sosmed/toggle/(\d+)$#', $uri, $m)) { $cms->socialMediaToggle($m[1]); return; }
+if (preg_match('#^/admin/sosmed/hapus/(\d+)$#', $uri, $m)) { $cms->socialMediaDelete($m[1]); return; }
+
 // --- PRESTASI ---
 if ($uri === '/admin/prestasi') { $cms->achievementsList(); return; }
 if ($uri === '/admin/prestasi/tambah') { ($method==='POST') ? $cms->achievementSave() : $cms->achievementForm(); return; }
