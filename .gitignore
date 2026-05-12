@@ -1,0 +1,22 @@
+# Upload files (jangan di-commit ke Git)
+assets/images/uploads/*
+!assets/images/uploads/.gitkeep
+
+# Environment / config lokal
+config/local.php
+.env
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# PHP error log
+*.log
+error_log
