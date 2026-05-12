@@ -2,7 +2,17 @@
 /**
  * Router - Simple PHP router
  * Parses REQUEST_URI and dispatches to controllers
+ * Base path is read from APP_BASE constant (set in config/env.php)
  */
+
+// Redirect to installer if env.php is missing or DB not configured
+if (!file_exists(__DIR__ . '/../config/env.php')) {
+    $installerUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http')
+        . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost')
+        . rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/install.php';
+    header('Location: ' . $installerUrl);
+    exit;
+}
 
 // Load controllers
 require_once __DIR__ . '/../app/controllers/PublicController.php';
@@ -23,11 +33,12 @@ if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
-// Get clean URI (strip app base path)
+// Get clean URI (strip app base path from env.php / config)
 $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-// Remove /webpertamaku prefix
-$basePath = '/webpertamaku';
-if (strpos($requestUri, $basePath) === 0) {
+$basePath    = defined('APP_BASE') ? APP_BASE : '/webpertamaku';
+// Strip trailing slash from basePath for clean compare
+$basePath    = rtrim($basePath, '/');
+if ($basePath !== '' && strpos($requestUri, $basePath) === 0) {
     $uri = substr($requestUri, strlen($basePath));
 } else {
     $uri = $requestUri;
