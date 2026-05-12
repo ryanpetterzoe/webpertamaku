@@ -473,6 +473,196 @@ class CmsController {
         require_once __DIR__ . '/../../views/admin/settings_general.php';
     }
 
+    // ===================== ACHIEVEMENTS / PRESTASI =====================
+    public function achievementsList() {
+        requireLogin();
+        $db = getDB();
+        $res = $db->query("SELECT * FROM achievements ORDER BY year DESC, id DESC");
+        $achievements = $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
+        require_once __DIR__ . '/../../views/admin/achievements_list.php';
+    }
+    public function achievementForm($id = null) {
+        requireLogin();
+        $db = getDB();
+        $achievement = null;
+        if ($id) {
+            $res = $db->query("SELECT * FROM achievements WHERE id=" . (int)$id . " LIMIT 1");
+            $achievement = $res ? $res->fetch_assoc() : null;
+        }
+        require_once __DIR__ . '/../../views/admin/achievements_form.php';
+    }
+    public function achievementSave($id = null) {
+        requireLogin();
+        $db = getDB();
+        $title = clean(isset($_POST['title']) ? $_POST['title'] : '');
+        $desc  = $db->real_escape_string(isset($_POST['description']) ? $_POST['description'] : '');
+        $level = clean(isset($_POST['level']) ? $_POST['level'] : 'sekolah');
+        $year  = (int)(isset($_POST['year']) ? $_POST['year'] : date('Y'));
+        $pub   = isset($_POST['is_published']) ? 1 : 0;
+        $imgVal = '';
+        if (!empty($_FILES['image']['tmp_name'])) $imgVal = uploadFile($_FILES['image'], 'ach');
+        if ($id) {
+            $img = $imgVal ? ", image='$imgVal'" : '';
+            $db->query("UPDATE achievements SET title='$title',description='$desc',level='$level',year=$year,is_published=$pub$img WHERE id=" . (int)$id);
+        } else {
+            $db->query("INSERT INTO achievements (title,description,image,level,year,is_published) VALUES ('$title','$desc','$imgVal','$level',$year,$pub)");
+        }
+        $this->flash('flash_success', 'Prestasi berhasil disimpan.');
+        redirect('/admin/prestasi');
+    }
+    public function achievementDelete($id) {
+        requireLogin();
+        getDB()->query("DELETE FROM achievements WHERE id=" . (int)$id);
+        $this->flash('flash_success', 'Prestasi berhasil dihapus.');
+        redirect('/admin/prestasi');
+    }
+
+    // ===================== TESTIMONIALS =====================
+    public function testimonialsList() {
+        requireLogin();
+        $db = getDB();
+        $res = $db->query("SELECT * FROM testimonials ORDER BY id DESC");
+        $testimonials = $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
+        require_once __DIR__ . '/../../views/admin/testimonials_list.php';
+    }
+    public function testimonialForm($id = null) {
+        requireLogin();
+        $db = getDB();
+        $testimonial = null;
+        if ($id) {
+            $res = $db->query("SELECT * FROM testimonials WHERE id=" . (int)$id . " LIMIT 1");
+            $testimonial = $res ? $res->fetch_assoc() : null;
+        }
+        require_once __DIR__ . '/../../views/admin/testimonials_form.php';
+    }
+    public function testimonialSave($id = null) {
+        requireLogin();
+        $db = getDB();
+        $name    = clean(isset($_POST['name']) ? $_POST['name'] : '');
+        $pos     = clean(isset($_POST['position']) ? $_POST['position'] : '');
+        $content = $db->real_escape_string(isset($_POST['content']) ? $_POST['content'] : '');
+        $rating  = (int)(isset($_POST['rating']) ? $_POST['rating'] : 5);
+        $pub     = isset($_POST['is_published']) ? 1 : 0;
+        $photoVal = '';
+        if (!empty($_FILES['photo']['tmp_name'])) $photoVal = uploadFile($_FILES['photo'], 'testi');
+        if ($id) {
+            $ph = $photoVal ? ", photo='$photoVal'" : '';
+            $db->query("UPDATE testimonials SET name='$name',position='$pos',content='$content',rating=$rating,is_published=$pub$ph WHERE id=" . (int)$id);
+        } else {
+            $db->query("INSERT INTO testimonials (name,position,content,photo,rating,is_published) VALUES ('$name','$pos','$content','$photoVal',$rating,$pub)");
+        }
+        $this->flash('flash_success', 'Testimoni berhasil disimpan.');
+        redirect('/admin/testimonial');
+    }
+    public function testimonialDelete($id) {
+        requireLogin();
+        getDB()->query("DELETE FROM testimonials WHERE id=" . (int)$id);
+        $this->flash('flash_success', 'Testimoni berhasil dihapus.');
+        redirect('/admin/testimonial');
+    }
+
+    // ===================== AGENDA =====================
+    public function agendaList() {
+        requireLogin();
+        $db = getDB();
+        $res = $db->query("SELECT * FROM agenda ORDER BY start_date DESC");
+        $agendas = $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
+        require_once __DIR__ . '/../../views/admin/agenda_list.php';
+    }
+    public function agendaForm($id = null) {
+        requireLogin();
+        $db = getDB();
+        $agenda = null;
+        if ($id) {
+            $res = $db->query("SELECT * FROM agenda WHERE id=" . (int)$id . " LIMIT 1");
+            $agenda = $res ? $res->fetch_assoc() : null;
+        }
+        require_once __DIR__ . '/../../views/admin/agenda_form.php';
+    }
+    public function agendaSave($id = null) {
+        requireLogin();
+        $db = getDB();
+        $title    = clean(isset($_POST['title']) ? $_POST['title'] : '');
+        $desc     = $db->real_escape_string(isset($_POST['description']) ? $_POST['description'] : '');
+        $location = clean(isset($_POST['location']) ? $_POST['location'] : '');
+        $start    = $db->real_escape_string(isset($_POST['start_date']) ? $_POST['start_date'] : '');
+        $end      = !empty($_POST['end_date']) ? "'" . $db->real_escape_string($_POST['end_date']) . "'" : 'NULL';
+        $pub      = isset($_POST['is_published']) ? 1 : 0;
+        if ($id) {
+            $db->query("UPDATE agenda SET title='$title',description='$desc',location='$location',start_date='$start',end_date=$end,is_published=$pub WHERE id=" . (int)$id);
+        } else {
+            $db->query("INSERT INTO agenda (title,description,location,start_date,end_date,is_published) VALUES ('$title','$desc','$location','$start',$end,$pub)");
+        }
+        $this->flash('flash_success', 'Agenda berhasil disimpan.');
+        redirect('/admin/agenda');
+    }
+    public function agendaDelete($id) {
+        requireLogin();
+        getDB()->query("DELETE FROM agenda WHERE id=" . (int)$id);
+        $this->flash('flash_success', 'Agenda berhasil dihapus.');
+        redirect('/admin/agenda');
+    }
+
+    // ===================== STAFF =====================
+    public function staffList() {
+        requireLogin();
+        $db = getDB();
+        $res = $db->query("SELECT * FROM staff ORDER BY sort_order ASC");
+        $staff = $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
+        require_once __DIR__ . '/../../views/admin/staff_list.php';
+    }
+    public function staffForm($id = null) {
+        requireLogin();
+        $db = getDB();
+        $staff = null;
+        if ($id) {
+            $res = $db->query("SELECT * FROM staff WHERE id=" . (int)$id . " LIMIT 1");
+            $staff = $res ? $res->fetch_assoc() : null;
+        }
+        require_once __DIR__ . '/../../views/admin/staff_form.php';
+    }
+    public function staffSave($id = null) {
+        requireLogin();
+        $db = getDB();
+        $flds = ['name','nip','position','department','email','phone'];
+        $v = [];
+        foreach ($flds as $f) $v[$f] = "'" . clean(isset($_POST[$f]) ? $_POST[$f] : '') . "'";
+        $sort = (int)(isset($_POST['sort_order']) ? $_POST['sort_order'] : 0);
+        $pub  = isset($_POST['is_active']) ? 1 : 0;
+        $ph   = '';
+        if (!empty($_FILES['photo']['tmp_name'])) $ph = uploadFile($_FILES['photo'], 'staff');
+        if ($id) {
+            $phs = $ph ? ", photo='$ph'" : '';
+            $db->query("UPDATE staff SET name={$v['name']},nip={$v['nip']},position={$v['position']},department={$v['department']},email={$v['email']},phone={$v['phone']},sort_order=$sort,is_active=$pub$phs WHERE id=" . (int)$id);
+        } else {
+            $db->query("INSERT INTO staff (name,nip,position,department,email,phone,photo,sort_order,is_active) VALUES ({$v['name']},{$v['nip']},{$v['position']},{$v['department']},{$v['email']},{$v['phone']},'$ph',$sort,$pub)");
+        }
+        $this->flash('flash_success', 'Data staff berhasil disimpan.');
+        redirect('/admin/staff');
+    }
+    public function staffDelete($id) {
+        requireLogin();
+        getDB()->query("DELETE FROM staff WHERE id=" . (int)$id);
+        $this->flash('flash_success', 'Staff berhasil dihapus.');
+        redirect('/admin/staff');
+    }
+
+    // ===================== SETTINGS TAMPILAN (ACCENT COLOR) =====================
+    public function settingsTampilan() {
+        requireLogin();
+        $db = getDB();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $keys = ['accent_primary','accent_dark','theme_default'];
+            foreach ($keys as $k) {
+                if (isset($_POST[$k])) $this->saveSetting($k, $_POST[$k], 'appearance');
+            }
+            $this->flash('flash_success', 'Pengaturan tampilan berhasil disimpan.');
+            redirect('/admin/settings/tampilan');
+        }
+        $settings = getSettings();
+        require_once __DIR__ . '/../../views/admin/settings_tampilan.php';
+    }
+
     private function saveSetting($key, $value, $group = 'general') {
         $db = getDB();
         $k = $db->real_escape_string($key);

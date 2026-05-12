@@ -147,12 +147,28 @@ class PublicController {
     public function achievements() {
         $db = getDB();
         $settings = getSettings();
-        $level = $db->real_escape_string($_GET['level'] ?? '');
+        $level = $db->real_escape_string(isset($_GET['level']) ? $_GET['level'] : '');
         $where = "is_published=1";
         if ($level) $where .= " AND level='$level'";
         $res = $db->query("SELECT * FROM achievements WHERE $where ORDER BY year DESC, id DESC");
         $achievements = $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
         require_once __DIR__ . '/../../views/public/achievements.php';
+    }
+
+    public function testimonials() {
+        $db = getDB();
+        $settings = getSettings();
+        $res = $db->query("SELECT * FROM testimonials WHERE is_published=1 ORDER BY id DESC");
+        $testimonials = $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
+        require_once __DIR__ . '/../../views/public/testimonials.php';
+    }
+
+    public function agenda() {
+        $db = getDB();
+        $settings = getSettings();
+        $res = $db->query("SELECT * FROM agenda WHERE is_published=1 ORDER BY start_date ASC");
+        $agendas = $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
+        require_once __DIR__ . '/../../views/public/agenda.php';
     }
 
     public function contact() {

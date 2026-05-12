@@ -43,10 +43,41 @@ function isActive(string $path, string $uri, string $base): string {
   <!-- Theme init — prevent flash -->
   <script>
     (function(){
-      var t = localStorage.getItem('smk_theme') || 'light';
+      var t = localStorage.getItem('smk_theme') || '<?= htmlspecialchars($settings['theme_default'] ?? 'light') ?>';
       document.documentElement.setAttribute('data-theme', t);
     })();
   </script>
+  <?php
+  // Inject custom accent color dari settings
+  $accentPrimary = !empty($settings['accent_primary']) ? $settings['accent_primary'] : '';
+  $accentDark    = !empty($settings['accent_dark'])    ? $settings['accent_dark']    : '';
+  if ($accentPrimary && $accentPrimary !== '#2563eb'):
+      $hx = ltrim($accentPrimary, '#');
+      if (strlen($hx) === 6) {
+          $r = hexdec(substr($hx,0,2));
+          $g = hexdec(substr($hx,2,2));
+          $b = hexdec(substr($hx,4,2));
+          $rgb = "$r,$g,$b";
+      } else { $rgb = '37,99,235'; }
+      $darkColor = $accentDark ?: $accentPrimary;
+  ?>
+  <style>
+  :root{
+    --primary:<?= $accentPrimary ?>;
+    --primary-dark:<?= $darkColor ?>;
+    --primary-glow:rgba(<?= $rgb ?>,0.20);
+    --shadow-blue:0 8px 32px rgba(<?= $rgb ?>,0.25);
+    --gradient:linear-gradient(135deg,<?= $accentPrimary ?> 0%,<?= $darkColor ?> 100%);
+  }
+  [data-theme="dark"]{
+    --primary:<?= $accentPrimary ?>;
+    --primary-dark:<?= $darkColor ?>;
+    --primary-glow:rgba(<?= $rgb ?>,0.25);
+    --shadow-blue:0 8px 32px rgba(<?= $rgb ?>,0.30);
+    --gradient:linear-gradient(135deg,<?= $accentPrimary ?> 0%,<?= $darkColor ?> 100%);
+  }
+  </style>
+  <?php endif; ?>
   <?php if (!empty($settings['ga_code'])): ?>
   <script async src="https://www.googletagmanager.com/gtag/js?id=<?= htmlspecialchars($settings['ga_code']) ?>"></script>
   <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','<?= htmlspecialchars($settings['ga_code']) ?>');</script>
