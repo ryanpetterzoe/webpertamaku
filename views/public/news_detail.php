@@ -21,6 +21,17 @@ require_once __DIR__ . '/../layouts/header.php';
                         <!-- Meta -->
                         <div class="d-flex flex-wrap align-items-center gap-3 mb-4">
                             <span class="badge bg-primary"><?= htmlspecialchars($news['category'] ?? '') ?></span>
+                            <?php
+                            // Ambil program_id berita ini
+                            $db2 = getDB();
+                            $newsProgRes = $db2->query("SELECT p.name, p.code, p.id FROM news n LEFT JOIN programs p ON n.program_id=p.id WHERE n.id=".(int)$news['id']." LIMIT 1");
+                            $newsProg = $newsProgRes ? $newsProgRes->fetch_assoc() : null;
+                            if ($newsProg && !empty($newsProg['name'])): ?>
+                            <a href="<?= APP_URL ?>/berita?program=<?= $newsProg['id'] ?>"
+                               style="background:var(--primary-glow);color:var(--primary);padding:3px 10px;border-radius:50px;font-size:.75rem;font-weight:700;text-decoration:none;border:1px solid rgba(37,99,235,.2);">
+                                <i class="fas fa-book me-1"></i><?= htmlspecialchars($newsProg['name']) ?>
+                            </a>
+                            <?php endif; ?>
                             <span style="color:var(--text-muted);font-size:0.85rem;"><i class="fas fa-user me-1"></i><?= htmlspecialchars($news['author'] ?? 'Admin') ?></span>
                             <span style="color:var(--text-muted);font-size:0.85rem;"><i class="fas fa-calendar me-1"></i><?= formatDate($news['published_at']) ?></span>
                             <span style="color:var(--text-muted);font-size:0.85rem;"><i class="fas fa-eye me-1"></i><?= number_format($news['views'] ?? 0) ?> dilihat</span>

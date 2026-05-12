@@ -2,6 +2,10 @@
 $isEdit = !empty($news);
 $adminPageTitle = $isEdit ? 'Edit Berita' : 'Tambah Berita';
 $csrfToken = isset($_SESSION['csrf_token']) ? $_SESSION['csrf_token'] : '';
+// Ambil daftar jurusan untuk dropdown
+$_db = getDB();
+$_progRes = $_db->query("SELECT id, name, code FROM programs WHERE is_active=1 ORDER BY sort_order");
+$_programs = $_progRes ? $_progRes->fetch_all(MYSQLI_ASSOC) : [];
 require_once __DIR__ . '/../layouts/admin_header.php';
 ?>
 
@@ -111,6 +115,26 @@ require_once __DIR__ . '/../layouts/admin_header.php';
                     <option value="Kegiatan">
                     <option value="Info">
                 </datalist>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">
+                    <i class="fas fa-book me-1" style="color:var(--primary);"></i>Jurusan
+                </label>
+                <select name="program_id" class="form-select">
+                    <option value="">— Umum (semua jurusan) —</option>
+                    <?php foreach ($_programs as $prog): ?>
+                    <option value="<?= $prog['id'] ?>"
+                        <?= ((int)($news['program_id'] ?? 0) === (int)$prog['id']) ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($prog['name']) ?>
+                        <?php if ($prog['code']): ?>(<?= htmlspecialchars($prog['code']) ?>)<?php endif; ?>
+                    </option>
+                    <?php endforeach; ?>
+                </select>
+                <small style="color:var(--text-muted);margin-top:4px;display:block;">
+                    Pilih jurusan jika berita khusus untuk jurusan tertentu.<br>
+                    Kosong = berita umum (muncul di semua jurusan).
+                </small>
             </div>
 
             <div class="d-grid gap-2 mt-4">

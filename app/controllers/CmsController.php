@@ -41,12 +41,13 @@ class CmsController {
     public function newsSave($id = null) {
         requireLogin();
         $db = getDB();
-        $title = clean($_POST['title'] ?? '');
-        $slug = $db->real_escape_string(preg_replace('/[^a-z0-9-]/', '', strtolower(str_replace(' ', '-', trim($_POST['slug'] ?? $title)))));
-        $excerpt = clean($_POST['excerpt'] ?? '');
-        $content = $db->real_escape_string($_POST['content'] ?? '');
-        $category = clean($_POST['category'] ?? 'Berita');
-        $author = clean($_POST['author'] ?? ($_SESSION['admin_name'] ?? 'Admin'));
+        $title       = clean(isset($_POST['title'])    ? $_POST['title']    : '');
+        $slug        = $db->real_escape_string(preg_replace('/[^a-z0-9-]/', '', strtolower(str_replace(' ', '-', trim(isset($_POST['slug']) ? $_POST['slug'] : $title)))));
+        $excerpt     = clean(isset($_POST['excerpt'])  ? $_POST['excerpt']  : '');
+        $content     = $db->real_escape_string(isset($_POST['content'])  ? $_POST['content']  : '');
+        $category    = clean(isset($_POST['category']) ? $_POST['category'] : 'Berita');
+        $author      = clean(isset($_POST['author'])   ? $_POST['author']   : (isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : 'Admin'));
+        $programId   = !empty($_POST['program_id']) ? (int)$_POST['program_id'] : 'NULL';
         $isPublished = isset($_POST['is_published']) ? 1 : 0;
 
         if (empty($title)) {
@@ -61,10 +62,10 @@ class CmsController {
 
         if ($id) {
             $imgSql = $imageVal ? ", image='$imageVal'" : '';
-            $db->query("UPDATE news SET title='$title',slug='$slug',excerpt='$excerpt',content='$content',category='$category',author='$author',is_published=$isPublished$imgSql WHERE id=" . (int)$id);
+            $db->query("UPDATE news SET title='$title',slug='$slug',excerpt='$excerpt',content='$content',category='$category',author='$author',program_id=$programId,is_published=$isPublished$imgSql WHERE id=" . (int)$id);
             $this->flash('flash_success', 'Berita berhasil diperbarui.');
         } else {
-            $db->query("INSERT INTO news (title,slug,excerpt,content,category,author,image,is_published) VALUES ('$title','$slug','$excerpt','$content','$category','$author','$imageVal',$isPublished)");
+            $db->query("INSERT INTO news (title,slug,excerpt,content,category,author,image,program_id,is_published) VALUES ('$title','$slug','$excerpt','$content','$category','$author','$imageVal',$programId,$isPublished)");
             $this->flash('flash_success', 'Berita berhasil ditambahkan.');
         }
         redirect('/admin/berita');
