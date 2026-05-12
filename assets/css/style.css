@@ -708,13 +708,22 @@ img { max-width: 100%; height: auto; }
   height: 100%;
 }
 .news-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-md); border-color: var(--primary); }
+/* Thumbnail mengikuti rasio asli gambar — flexible */
+.news-card-img-wrap {
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+  /* Fallback minimum agar card tidak terlalu pipih */
+  min-height: 140px;
+}
 .news-card-img {
-  width: 100%; height: 200px;
-  object-fit: cover;
+  display: block;
+  width: 100%;
+  height: auto;          /* tinggi mengikuti rasio asli */
+  object-fit: unset;     /* tidak crop, tampil penuh */
   transition: transform 0.5s ease;
 }
-.news-card:hover .news-card-img { transform: scale(1.04); }
-.news-card-img-wrap { overflow: hidden; height: 200px; position: relative; }
+.news-card:hover .news-card-img { transform: scale(1.03); }
 .news-img-placeholder {
   width: 100%; height: 200px;
   background: linear-gradient(135deg, var(--bg-secondary), var(--border));
