@@ -1,0 +1,483 @@
+<?php
+/**
+ * CmsController - Full CRUD for all CMS features
+ */
+class CmsController {
+
+    private function flash($key, $msg) {
+        $_SESSION[$key] = $msg;
+    }
+
+    // ===================== NEWS =====================
+    public function newsList() {
+        requireLogin();
+        $db = getDB();
+        $page = max(1, (int)($_GET['page'] ?? 1));
+        $perPage = 15;
+        $q = $db->real_escape_string($_GET['q'] ?? '');
+        $where = $q ? "WHERE title LIKE '%$q%'" : '';
+        $total = (int)$db->query("SELECT COUNT(*) as c FROM news $where")->fetch_assoc()['c'];
+        $totalPages = ceil($total / $perPage);
+        $offset = ($page - 1) * $perPage;
+        $res = $db->query("SELECT * FROM news $where ORDER BY created_at DESC LIMIT $perPage OFFSET $offset");
+        $news = $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
+        $currentPage = $page;
+        require_once __DIR__ . '/../../views/admin/news_list.php';
+    }
+
+    public function newsForm($id = null) {
+        requireLogin();
+        $db = getDB();
+        if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        $news = null;
+        if ($id) {
+            $res = $db->query("SELECT * FROM news WHERE id=" . (int)$id . " LIMIT 1");
+            $news = $res ? $res->fetch_assoc() : null;
+            if (!$news) redirect('/admin/berita');
+        }
+        require_once __DIR__ . '/../../views/admin/news_form.php';
+    }
+
+    public function newsSave($id = null) {
+        requireLogin();
+        $db = getDB();
+        $title = clean($_POST['title'] ?? '');
+        $slug = $db->real_escape_string(preg_replace('/[^a-z0-9-]/', '', strtolower(str_replace(' ', '-', trim($_POST['slug'] ?? $title)))));
+        $excerpt = clean($_POST['excerpt'] ?? '');
+        $content = $db->real_escape_string($_POST['content'] ?? '');
+        $category = clean($_POST['category'] ?? 'Berita');
+        $author = clean($_POST['author'] ?? ($_SESSION['admin_name'] ?? 'Admin'));
+        $isPublished = isset($_POST['is_published']) ? 1 : 0;
+
+        if (empty($title)) {
+            $this->flash('flash_error', 'Judul berita wajib diisi.');
+            redirect($id ? '/admin/berita/edit/' . $id : '/admin/berita/tambah');
+        }
+
+        $imageVal = '';
+        if (!empty($_FILES['image']['tmp_name'])) {
+            $imageVal = uploadFile($_FILES['image'], 'news');
+        }
+
+        if ($id) {
+            $imgSql = $imageVal ? ", image='$imageVal'" : '';
+            $db->query("UPDATE news SET title='$title',slug='$slug',excerpt='$excerpt',content='$content',category='$category',author='$author',is_published=$isPublished$imgSql WHERE id=" . (int)$id);
+            $this->flash('flash_success', 'Berita berhasil diperbarui.');
+        } else {
+            $db->query("INSERT INTO news (title,slug,excerpt,content,category,author,image,is_published) VALUES ('$title','$slug','$excerpt','$content','$category','$author','$imageVal',$isPublished)");
+            $this->flash('flash_success', 'Berita berhasil ditambahkan.');
+        }
+        redirect('/admin/berita');
+    }
+
+    public function newsToggle($id) {
+        requireLogin();
+        $db = getDB();
+        $db->query("UPDATE news SET is_published = NOT is_published WHERE id=" . (int)$id);
+        $this->flash('flash_success', 'Status berita berhasil diubah.');
+        redirect('/admin/berita');
+    }
+
+    public function newsDelete($id) {
+        requireLogin();
+        $db = getDB();
+        $db->query("DELETE FROM news WHERE id=" . (int)$id);
+        $this->flash('flash_success', 'Berita berhasil dihapus.');
+        redirect('/admin/berita');
+    }
+
+    // ===================== GALLERY =====================
+    public function galleryList() {
+        requireLogin();
+        $db = getDB();
+        $res = $db->query("SELECT * FROM gallery ORDER BY created_at DESC");
+        $gallery = $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
+        require_once __DIR__ . '/../../views/admin/gallery_list.php';
+    }
+
+    public function galleryForm($id = null) {
+        requireLogin();
+        $db = getDB();
+        if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        $gallery = null;
+        if ($id) {
+            $res = $db->query("SELECT * FROM gallery WHERE id=" . (int)$id . " LIMIT 1");
+            $gallery = $res ? $res->fetch_assoc() : null;
+        }
+        require_once __DIR__ . '/../../views/admin/gallery_form.php';
+    }
+
+    public function gallerySave($id = null) {
+        requireLogin();
+        $db = getDB();
+        $title = clean($_POST['title'] ?? '');
+        $category = clean($_POST['category'] ?? 'Umum');
+        $description = clean($_POST['description'] ?? '');
+        $isPublished = isset($_POST['is_published']) ? 1 : 0;
+
+        $imageVal = '';
+        if (!empty($_FILES['image']['tmp_name'])) {
+            $imageVal = uploadFile($_FILES['image'], 'gallery');
+        }
+
+        if ($id) {
+            $imgSql = $imageVal ? ", image='$imageVal'" : '';
+            $db->query("UPDATE gallery SET title='$title',category='$category',description='$description',is_published=$isPublished$imgSql WHERE id=" . (int)$id);
+        } else {
+            if (empty($imageVal)) { $this->flash('flash_error', 'Gambar wajib diupload.'); redirect('/admin/galeri/tambah'); }
+            $db->query("INSERT INTO gallery (title,category,description,image,is_published) VALUES ('$title','$category','$description','$imageVal',$isPublished)");
+        }
+        $this->flash('flash_success', 'Foto galeri berhasil disimpan.');
+        redirect('/admin/galeri');
+    }
+
+    public function galleryDelete($id) {
+        requireLogin();
+        $db = getDB();
+        $db->query("DELETE FROM gallery WHERE id=" . (int)$id);
+        $this->flash('flash_success', 'Foto berhasil dihapus.');
+        redirect('/admin/galeri');
+    }
+
+    // ===================== SLIDERS =====================
+    public function sliderList() {
+        requireLogin();
+        $db = getDB();
+        $res = $db->query("SELECT * FROM sliders ORDER BY sort_order ASC");
+        $sliders = $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
+        require_once __DIR__ . '/../../views/admin/sliders_list.php';
+    }
+
+    public function sliderForm($id = null) {
+        requireLogin();
+        $db = getDB();
+        if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        $slider = null;
+        if ($id) {
+            $res = $db->query("SELECT * FROM sliders WHERE id=" . (int)$id . " LIMIT 1");
+            $slider = $res ? $res->fetch_assoc() : null;
+        }
+        require_once __DIR__ . '/../../views/admin/sliders_form.php';
+    }
+
+    public function sliderSave($id = null) {
+        requireLogin();
+        $db = getDB();
+        $title = clean($_POST['title'] ?? '');
+        $subtitle = clean($_POST['subtitle'] ?? '');
+        $btnText = clean($_POST['button_text'] ?? '');
+        $btnUrl = clean($_POST['button_url'] ?? '');
+        $sortOrder = (int)($_POST['sort_order'] ?? 1);
+        $isActive = isset($_POST['is_active']) ? 1 : 0;
+        $imageVal = '';
+        if (!empty($_FILES['image']['tmp_name'])) {
+            $imageVal = uploadFile($_FILES['image'], 'slider');
+        }
+        if ($id) {
+            $imgSql = $imageVal ? ", image='$imageVal'" : '';
+            $db->query("UPDATE sliders SET title='$title',subtitle='$subtitle',button_text='$btnText',button_url='$btnUrl',sort_order=$sortOrder,is_active=$isActive$imgSql WHERE id=" . (int)$id);
+        } else {
+            if (empty($imageVal)) { $this->flash('flash_error', 'Gambar slider wajib diupload.'); redirect('/admin/slider/tambah'); }
+            $db->query("INSERT INTO sliders (title,subtitle,image,button_text,button_url,sort_order,is_active) VALUES ('$title','$subtitle','$imageVal','$btnText','$btnUrl',$sortOrder,$isActive)");
+        }
+        $this->flash('flash_success', 'Slider berhasil disimpan.');
+        redirect('/admin/slider');
+    }
+
+    public function sliderDelete($id) {
+        requireLogin();
+        $db = getDB();
+        $db->query("DELETE FROM sliders WHERE id=" . (int)$id);
+        $this->flash('flash_success', 'Slider berhasil dihapus.');
+        redirect('/admin/slider');
+    }
+
+    // ===================== PROGRAMS =====================
+    public function programsList() {
+        requireLogin();
+        $db = getDB();
+        $res = $db->query("SELECT * FROM programs ORDER BY sort_order ASC");
+        $programs = $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
+        require_once __DIR__ . '/../../views/admin/programs_list.php';
+    }
+
+    public function programForm($id = null) {
+        requireLogin();
+        $db = getDB();
+        if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        $program = null;
+        if ($id) {
+            $res = $db->query("SELECT * FROM programs WHERE id=" . (int)$id . " LIMIT 1");
+            $program = $res ? $res->fetch_assoc() : null;
+        }
+        require_once __DIR__ . '/../../views/admin/programs_form.php';
+    }
+
+    public function programSave($id = null) {
+        requireLogin();
+        $db = getDB();
+        $name = clean($_POST['name'] ?? '');
+        $code = clean($_POST['code'] ?? '');
+        $description = $db->real_escape_string($_POST['description'] ?? '');
+        $icon = clean($_POST['icon'] ?? 'fas fa-book');
+        $quota = (int)($_POST['quota'] ?? 36);
+        $sortOrder = (int)($_POST['sort_order'] ?? 0);
+        $isActive = isset($_POST['is_active']) ? 1 : 0;
+        $imageVal = '';
+        if (!empty($_FILES['image']['tmp_name'])) {
+            $imageVal = uploadFile($_FILES['image'], 'program');
+        }
+        if ($id) {
+            $imgSql = $imageVal ? ", image='$imageVal'" : '';
+            $db->query("UPDATE programs SET name='$name',code='$code',description='$description',icon='$icon',quota=$quota,sort_order=$sortOrder,is_active=$isActive$imgSql WHERE id=" . (int)$id);
+        } else {
+            $db->query("INSERT INTO programs (name,code,description,icon,quota,sort_order,is_active,image) VALUES ('$name','$code','$description','$icon',$quota,$sortOrder,$isActive,'$imageVal')");
+        }
+        $this->flash('flash_success', 'Jurusan berhasil disimpan.');
+        redirect('/admin/jurusan');
+    }
+
+    public function programDelete($id) {
+        requireLogin();
+        $db = getDB();
+        $db->query("DELETE FROM programs WHERE id=" . (int)$id);
+        $this->flash('flash_success', 'Jurusan berhasil dihapus.');
+        redirect('/admin/jurusan');
+    }
+
+    // ===================== TEACHERS =====================
+    public function teachersList() {
+        requireLogin();
+        $db = getDB();
+        $res = $db->query("SELECT * FROM teachers ORDER BY sort_order ASC");
+        $teachers = $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
+        require_once __DIR__ . '/../../views/admin/teachers_list.php';
+    }
+
+    public function teacherForm($id = null) {
+        requireLogin();
+        $db = getDB();
+        if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        $teacher = null;
+        if ($id) {
+            $res = $db->query("SELECT * FROM teachers WHERE id=" . (int)$id . " LIMIT 1");
+            $teacher = $res ? $res->fetch_assoc() : null;
+        }
+        require_once __DIR__ . '/../../views/admin/teachers_form.php';
+    }
+
+    public function teacherSave($id = null) {
+        requireLogin();
+        $db = getDB();
+        $fields = ['name','nip','position','subject','education','email','phone'];
+        $vals = [];
+        foreach ($fields as $f) $vals[$f] = "'" . clean($_POST[$f] ?? '') . "'";
+        $sortOrder = (int)($_POST['sort_order'] ?? 0);
+        $isActive = isset($_POST['is_active']) ? 1 : 0;
+        $photoVal = '';
+        if (!empty($_FILES['photo']['tmp_name'])) {
+            $photoVal = uploadFile($_FILES['photo'], 'teacher');
+        }
+        if ($id) {
+            $photoSql = $photoVal ? ", photo='$photoVal'" : '';
+            $db->query("UPDATE teachers SET name={$vals['name']},nip={$vals['nip']},position={$vals['position']},subject={$vals['subject']},education={$vals['education']},email={$vals['email']},phone={$vals['phone']},sort_order=$sortOrder,is_active=$isActive$photoSql WHERE id=" . (int)$id);
+        } else {
+            $db->query("INSERT INTO teachers (name,nip,position,subject,education,email,phone,photo,sort_order,is_active) VALUES ({$vals['name']},{$vals['nip']},{$vals['position']},{$vals['subject']},{$vals['education']},{$vals['email']},{$vals['phone']},'$photoVal',$sortOrder,$isActive)");
+        }
+        $this->flash('flash_success', 'Data guru berhasil disimpan.');
+        redirect('/admin/guru');
+    }
+
+    public function teacherDelete($id) {
+        requireLogin();
+        $db = getDB();
+        $db->query("DELETE FROM teachers WHERE id=" . (int)$id);
+        $this->flash('flash_success', 'Data guru berhasil dihapus.');
+        redirect('/admin/guru');
+    }
+
+    // ===================== CONTACTS =====================
+    public function contactsList() {
+        requireLogin();
+        $db = getDB();
+        $res = $db->query("SELECT * FROM contacts ORDER BY is_read ASC, created_at DESC");
+        $contacts = $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
+        $unreadRes = $db->query("SELECT COUNT(*) as c FROM contacts WHERE is_read=0");
+        $unreadCount = $unreadRes ? (int)$unreadRes->fetch_assoc()['c'] : 0;
+        require_once __DIR__ . '/../../views/admin/contacts_list.php';
+    }
+
+    public function contactRead($id) {
+        requireLogin();
+        $db = getDB();
+        $db->query("UPDATE contacts SET is_read=1 WHERE id=" . (int)$id);
+        // AJAX friendly
+        if (!empty($_SERVER['HTTP_X_REQUESTED_WITH'])) {
+            echo json_encode(['success' => true]);
+            exit;
+        }
+        redirect('/admin/kontak');
+    }
+
+    public function contactDelete($id) {
+        requireLogin();
+        $db = getDB();
+        $db->query("DELETE FROM contacts WHERE id=" . (int)$id);
+        $this->flash('flash_success', 'Pesan berhasil dihapus.');
+        redirect('/admin/kontak');
+    }
+
+    // ===================== SPMB REGISTRATIONS =====================
+    public function spmbList() {
+        requireLogin();
+        $db = getDB();
+        $status = $db->real_escape_string($_GET['status'] ?? '');
+        $programFilter = (int)($_GET['program'] ?? 0);
+        $q = $db->real_escape_string($_GET['q'] ?? '');
+
+        $where = "1=1";
+        if ($status) $where .= " AND r.status='$status'";
+        if ($programFilter) $where .= " AND r.program_id=$programFilter";
+        if ($q) $where .= " AND r.full_name LIKE '%$q%'";
+
+        $res = $db->query("SELECT r.*, p.name as program_name FROM spmb_registrations r LEFT JOIN programs p ON r.program_id=p.id WHERE $where ORDER BY r.created_at DESC");
+        $registrations = $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
+
+        // Status counts
+        $statusCount = [];
+        foreach (['pending','verifikasi','diterima','ditolak'] as $st) {
+            $r = $db->query("SELECT COUNT(*) as c FROM spmb_registrations WHERE status='$st'");
+            $statusCount[$st] = $r ? (int)$r->fetch_assoc()['c'] : 0;
+        }
+
+        $resP = $db->query("SELECT id,name FROM programs WHERE is_active=1 ORDER BY sort_order");
+        $programs = $resP ? $resP->fetch_all(MYSQLI_ASSOC) : [];
+        require_once __DIR__ . '/../../views/admin/spmb_list.php';
+    }
+
+    public function spmbDetail($id) {
+        requireLogin();
+        $db = getDB();
+        if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        $res = $db->query("SELECT r.*, p.name as program_name, p2.name as program_choice2_name FROM spmb_registrations r LEFT JOIN programs p ON r.program_id=p.id LEFT JOIN programs p2 ON r.program_choice2=p2.id WHERE r.id=" . (int)$id . " LIMIT 1");
+        if (!$res || !($reg = $res->fetch_assoc())) {
+            $this->flash('flash_error', 'Data tidak ditemukan.');
+            redirect('/admin/spmb/pendaftar');
+        }
+        require_once __DIR__ . '/../../views/admin/spmb_detail.php';
+    }
+
+    public function spmbUpdateStatus($id) {
+        requireLogin();
+        $db = getDB();
+        $status = $db->real_escape_string($_POST['status'] ?? 'pending');
+        $notes = $db->real_escape_string($_POST['notes'] ?? '');
+        $adminId = (int)($_SESSION['admin_id'] ?? 0);
+        $db->query("UPDATE spmb_registrations SET status='$status',notes='$notes',verified_by=$adminId,verified_at=NOW() WHERE id=" . (int)$id);
+        $this->flash('flash_success', 'Status pendaftar berhasil diperbarui.');
+        redirect('/admin/spmb/pendaftar');
+    }
+
+    public function spmbDelete($id) {
+        requireLogin();
+        $db = getDB();
+        $db->query("DELETE FROM spmb_registrations WHERE id=" . (int)$id);
+        $this->flash('flash_success', 'Data pendaftar berhasil dihapus.');
+        redirect('/admin/spmb/pendaftar');
+    }
+
+    public function spmbExport() {
+        requireLogin();
+        $db = getDB();
+        $res = $db->query("SELECT r.*, p.name as program_name FROM spmb_registrations r LEFT JOIN programs p ON r.program_id=p.id ORDER BY r.created_at DESC");
+        $rows = $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
+
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="spmb_' . date('Ymd') . '.csv"');
+        $out = fopen('php://output', 'w');
+        fprintf($out, chr(0xEF).chr(0xBB).chr(0xBF)); // BOM UTF-8
+        fputcsv($out, ['No Daftar','Nama Lengkap','Gender','TTL','Asal Sekolah','NISN','Jurusan','Nama Ayah','Nama Ibu','Status','Tgl Daftar']);
+        foreach ($rows as $r) {
+            fputcsv($out, [
+                $r['registration_number'], $r['full_name'], $r['gender'],
+                $r['birth_place'] . ', ' . $r['birth_date'], $r['school_origin'],
+                $r['nisn'], $r['program_name'] ?? '-',
+                $r['father_name'] ?? '-', $r['mother_name'] ?? '-',
+                $r['status'], $r['created_at']
+            ]);
+        }
+        fclose($out);
+        exit;
+    }
+
+    // ===================== SPMB SETTINGS =====================
+    public function spmbSettings() {
+        requireLogin();
+        $db = getDB();
+        if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        $res = $db->query("SELECT * FROM spmb_settings ORDER BY id DESC LIMIT 1");
+        $spmb = $res ? ($res->fetch_assoc() ?: []) : [];
+        require_once __DIR__ . '/../../views/admin/spmb_settings.php';
+    }
+
+    public function spmbSettingsSave() {
+        requireLogin();
+        $db = getDB();
+        $ay = clean($_POST['academic_year'] ?? '');
+        $open = $db->real_escape_string($_POST['open_date'] ?? '');
+        $close = $db->real_escape_string($_POST['close_date'] ?? '');
+        $ann = !empty($_POST['announcement_date']) ? "'" . $db->real_escape_string($_POST['announcement_date']) . "'" : 'NULL';
+        $quota = (int)($_POST['quota_total'] ?? 144);
+        $isActive = isset($_POST['is_active']) ? 1 : 0;
+        $info = $db->real_escape_string($_POST['info'] ?? '');
+        $reqs = $db->real_escape_string($_POST['requirements'] ?? '');
+        $id = (int)($_POST['id'] ?? 0);
+
+        if ($id) {
+            $db->query("UPDATE spmb_settings SET academic_year='$ay',open_date='$open',close_date='$close',announcement_date=$ann,quota_total=$quota,is_active=$isActive,info='$info',requirements='$reqs' WHERE id=$id");
+        } else {
+            $db->query("INSERT INTO spmb_settings (academic_year,open_date,close_date,announcement_date,quota_total,is_active,info,requirements) VALUES ('$ay','$open','$close',$ann,$quota,$isActive,'$info','$reqs')");
+        }
+        $this->flash('flash_success', 'Pengaturan SPMB berhasil disimpan.');
+        redirect('/admin/spmb/pengaturan');
+    }
+
+    // ===================== SETTINGS =====================
+    public function settingsGeneral() {
+        requireLogin();
+        $db = getDB();
+        if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $group = $_POST['group'] ?? 'general';
+            // Handle file uploads
+            if (!empty($_FILES['school_logo_file']['tmp_name'])) {
+                $logo = uploadFile($_FILES['school_logo_file'], 'logo');
+                if ($logo) $this->saveSetting('school_logo', $logo, 'general');
+            }
+            if (!empty($_FILES['principal_photo_file']['tmp_name'])) {
+                $photo = uploadFile($_FILES['principal_photo_file'], 'principal');
+                if ($photo) $this->saveSetting('principal_photo', $photo, 'about');
+            }
+            // Save all text settings
+            $exclude = ['_token','group','school_logo_file','principal_photo_file'];
+            foreach ($_POST as $key => $val) {
+                if (in_array($key, $exclude)) continue;
+                $this->saveSetting($key, $val, $group);
+            }
+            $this->flash('flash_success', 'Pengaturan berhasil disimpan.');
+            redirect('/admin/settings/umum');
+        }
+
+        $settings = getSettings();
+        require_once __DIR__ . '/../../views/admin/settings_general.php';
+    }
+
+    private function saveSetting($key, $value, $group = 'general') {
+        $db = getDB();
+        $k = $db->real_escape_string($key);
+        $v = $db->real_escape_string($value);
+        $g = $db->real_escape_string($group);
+        $db->query("INSERT INTO settings (`key`,`value`,`group`) VALUES ('$k','$v','$g') ON DUPLICATE KEY UPDATE `value`='$v'");
+    }
+}
