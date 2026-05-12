@@ -88,9 +88,15 @@ require_once __DIR__ . '/../layouts/header.php';
                         </table>
                     </div>
                     <div class="col-lg-6">
+                        <?php if (!empty($settings['school_building_photo'])): ?>
+                        <img src="<?= UPLOAD_URL . htmlspecialchars($settings['school_building_photo']) ?>"
+                             alt="Gedung <?= htmlspecialchars($settings['school_name'] ?? '') ?>"
+                             style="width:100%;height:300px;object-fit:cover;border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);">
+                        <?php else: ?>
                         <div class="img-placeholder rounded-xl" style="height:300px;font-size:4rem;">
                             <i class="fas fa-school" style="color:var(--primary);"></i>
                         </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>

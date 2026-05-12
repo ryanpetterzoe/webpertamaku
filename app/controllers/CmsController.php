@@ -456,6 +456,10 @@ class CmsController {
                 $logo = uploadFile($_FILES['school_logo_file'], 'logo');
                 if ($logo) $this->saveSetting('school_logo', $logo, 'general');
             }
+            if (!empty($_FILES['school_building_photo_file']['tmp_name'])) {
+                $bldg = uploadFile($_FILES['school_building_photo_file'], 'building');
+                if ($bldg) $this->saveSetting('school_building_photo', $bldg, 'general');
+            }
             if (!empty($_FILES['principal_photo_file']['tmp_name'])) {
                 $photo = uploadFile($_FILES['principal_photo_file'], 'principal');
                 if ($photo) $this->saveSetting('principal_photo', $photo, 'about');
