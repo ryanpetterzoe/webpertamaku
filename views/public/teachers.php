@@ -20,11 +20,11 @@ require_once __DIR__ . '/../layouts/header.php';
             <h2>Tenaga Pendidik</h2>
             <p>Guru-guru berpengalaman dan berdedikasi tinggi</p>
         </div>
-        <div class="row g-4 mb-5">
+        <div class="row g-3 g-md-4 mb-5">
             <?php foreach ($teachers as $teacher): ?>
-            <div class="col-lg-2 col-md-3 col-4">
+            <div class="col-6 col-md-4 col-lg-2">
                 <div class="card teacher-card h-100">
-                    <div class="card-body py-4">
+                    <div class="card-body py-3 px-2 px-md-3">
                         <div class="teacher-photo">
                             <?php if (!empty($teacher['photo'])): ?>
                                 <img src="<?= UPLOAD_URL . htmlspecialchars($teacher['photo']) ?>" alt="<?= htmlspecialchars($teacher['name']) ?>">
@@ -50,11 +50,11 @@ require_once __DIR__ . '/../layouts/header.php';
             <h2>Tenaga Kependidikan</h2>
             <p>Staff pendukung yang memastikan operasional sekolah berjalan lancar</p>
         </div>
-        <div class="row g-4">
+        <div class="row g-3 g-md-4">
             <?php foreach ($staff as $s): ?>
-            <div class="col-lg-2 col-md-3 col-4">
+            <div class="col-6 col-md-4 col-lg-2">
                 <div class="card teacher-card h-100">
-                    <div class="card-body py-4">
+                    <div class="card-body py-3 px-2 px-md-3">
                         <div class="teacher-photo">
                             <?php if (!empty($s['photo'])): ?>
                                 <img src="<?= UPLOAD_URL . htmlspecialchars($s['photo']) ?>" alt="<?= htmlspecialchars($s['name']) ?>">
